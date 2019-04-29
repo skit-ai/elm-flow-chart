@@ -3,7 +3,7 @@ module Main exposing (Model, Msg(..), dragEvent, init, main, subscriptions, upda
 import Browser
 import Html exposing (Html, button, div, text)
 import Html.Attributes as A
-import Types exposing (Position)
+import Types exposing (Position, FCNode)
 import Utils.Draggable as Draggable
 
 
@@ -17,12 +17,13 @@ main =
 
 
 type alias Model =
-    { position : Position, dragState : Draggable.DragState }
+    { position : Position, dragState : Draggable.DragState () }
 
 
 type Msg
-    = DragMsg Draggable.Msg
+    = DragMsg (Draggable.Msg ())
     | OnDragBy Position
+    | OnDragStart ()
 
 
 init : () -> ( Model, Cmd Msg )
@@ -36,11 +37,11 @@ init _ =
 -- SUB
 
 
-dragEvent : Draggable.Event Msg
+dragEvent : Draggable.Event Msg ()
 dragEvent =
-    { onDragStart = Nothing
-    , onDragBy = Just << OnDragBy
-    , onDragEnd = Nothing
+    { onDragStartListener = Just << OnDragStart
+    , onDragByListener = Just << OnDragBy
+    , onDragEndListener = Nothing
     }
 
 
@@ -66,19 +67,18 @@ update msg mod =
             in
             ( { mod | position = newPos }, Cmd.none )
 
+        OnDragStart id ->
+            (mod, Cmd.none)
+
 
 view : Model -> Html Msg
 view mod =
-    let
-        translate =
-            "translate(" ++ String.fromFloat mod.position.x ++ "px, " ++ String.fromFloat mod.position.y ++ "px)"
-    in
     div
-        [ A.style "transform" translate
+        [ A.style "transform" (Draggable.move mod.position)
         , A.style "padding" "16px"
         , A.style "background-color" "lightgray"
         , A.style "width" "64px"
         , A.style "cursor" "move"
-        , Draggable.enableDragging DragMsg
+        , Draggable.enableDragging () DragMsg
         ]
         [ Html.text "Drag me" ]

@@ -1,38 +1,38 @@
-module Utils.Draggable exposing (DragState, Event, Msg, enableDragging, init, subscriptions, update)
+module Utils.Draggable exposing (DragState, Event, Msg, enableDragging, init, subscriptions, update, move)
 
 import Browser.Events
 import Html
 import Html.Events
-import Json.Decode as Decode exposing (Decoder, field)
+import Json.Decode as Decode
 import Types exposing (Position)
 import Utils.CmdExtra as CmdExtra
 
 
-type DragState
+type DragState id
     = NotDragging
     | TentativeDrag Position
     | Dragging Position
 
 
-type Msg
-    = DragStart Position
+type Msg id
+    = DragStart id Position
     | DragBy Position
     | DragEnd Position
 
 
-type alias Event msg =
-    { onDragStart : Maybe msg
-    , onDragBy : Position -> Maybe msg
-    , onDragEnd : Maybe msg
+type alias Event msg id =
+    { onDragStartListener : id -> Maybe msg
+    , onDragByListener : Position -> Maybe msg
+    , onDragEndListener : Maybe msg
     }
 
 
-init : DragState
+init : DragState id
 init =
     NotDragging
 
 
-subscriptions : (Msg -> msg) -> DragState -> Sub msg
+subscriptions : (Msg id -> msg) -> DragState id -> Sub msg
 subscriptions envelope dragState =
     case dragState of
         NotDragging ->
@@ -46,17 +46,17 @@ subscriptions envelope dragState =
                 |> Sub.map envelope
 
 
-enableDragging : (Msg -> msg) -> Html.Attribute msg
-enableDragging target =
+enableDragging : id -> (Msg id -> msg) -> Html.Attribute msg
+enableDragging key target =
     Html.Events.custom "mousedown"
-        (Decode.map (alwaysPreventDefaultAndStopPropagation << target) baseDecoder)
+        (Decode.map (alwaysPreventDefaultAndStopPropagation << target) (baseDecoder key))
 
 
 update :
-    Event msg
-    -> Msg
-    -> { m | dragState : DragState }
-    -> ( { m | dragState : DragState }, Cmd msg )
+    Event msg id
+    -> Msg id
+    -> { m | dragState : DragState id }
+    -> ( { m | dragState : DragState id }, Cmd msg )
 update event msg model =
     let
         ( newDrag, newMsgMaybe ) =
@@ -64,6 +64,10 @@ update event msg model =
     in
     ( { model | dragState = newDrag }, CmdExtra.optionalMessage newMsgMaybe )
 
+
+move : Position -> String
+move pos =
+    "translate(" ++ String.fromFloat pos.x ++ "px, " ++ String.fromFloat pos.y ++ "px)"
 
 
 -- HELPER FUNCS
@@ -74,14 +78,14 @@ alwaysPreventDefaultAndStopPropagation msg =
     { message = msg, stopPropagation = True, preventDefault = True }
 
 
-updateInternal : Event msg -> Msg -> DragState -> ( DragState, Maybe msg )
+updateInternal : Event msg id -> Msg id -> DragState id -> ( DragState id, Maybe msg )
 updateInternal event msg dragState =
     case msg of
-        DragStart pos ->
-            ( TentativeDrag pos, event.onDragStart )
+        DragStart id pos ->
+            ( TentativeDrag pos, event.onDragStartListener id )
 
         DragEnd pos ->
-            ( NotDragging, event.onDragEnd )
+            ( NotDragging, event.onDragEndListener )
 
         DragBy newPos ->
             case dragState of
@@ -89,22 +93,22 @@ updateInternal event msg dragState =
                     ( dragState, Nothing )
 
                 TentativeDrag oldPos ->
-                    ( Dragging newPos, event.onDragBy (calcDelta newPos oldPos) )
+                    ( Dragging newPos, event.onDragByListener (calcDelta newPos oldPos) )
 
                 Dragging oldPos ->
-                    ( Dragging newPos, event.onDragBy (calcDelta newPos oldPos) )
+                    ( Dragging newPos, event.onDragByListener (calcDelta newPos oldPos) )
 
 
-positionDecoder : Decoder Position
+positionDecoder : Decode.Decoder Position
 positionDecoder =
     Decode.map2 Position
-        (field "pageX" Decode.float)
-        (field "pageY" Decode.float)
+        (Decode.field "pageX" Decode.float)
+        (Decode.field "pageY" Decode.float)
 
 
-baseDecoder : Decoder Msg
-baseDecoder =
-    Decode.map DragStart positionDecoder
+baseDecoder : id -> Decode.Decoder (Msg id)
+baseDecoder key =
+    Decode.map (DragStart key) positionDecoder
 
 
 calcDelta : Position -> Position -> Position
