@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg(..), dragEvent, init, main, subscriptions, update, view)
+module Canvas exposing (Model, Msg(..), dragEvent, init, main, subscriptions, update, view)
 
 import Browser
 import Html exposing (Html, button, div, text)
