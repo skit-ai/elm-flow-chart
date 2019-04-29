@@ -10,12 +10,12 @@ import Utils.CmdExtra as CmdExtra
 
 type DragState
     = NotDragging
-    | TentativeDrag
-    | Dragging
+    | TentativeDrag Position
+    | Dragging Position
 
 
 type Msg
-    = DragStart
+    = DragStart Position
     | DragAt Position
     | DragEnd Position
 
@@ -48,8 +48,8 @@ subscriptions envelope dragState =
 
 enableDragging : (Msg -> msg) -> Html.Attribute msg
 enableDragging target =
-    Html.Events.custom "mousedown" <|
-        Decode.succeed (alwaysPreventDefaultAndStopPropagation (target DragStart))
+    Html.Events.custom "mousedown"
+        (Decode.map (alwaysPreventDefaultAndStopPropagation << target) baseDecoder)
 
 
 update :
@@ -77,18 +77,22 @@ alwaysPreventDefaultAndStopPropagation msg =
 updateInternal : Event msg -> Msg -> DragState -> ( DragState, Maybe msg )
 updateInternal event msg dragState =
     case msg of
-        DragStart ->
-            ( TentativeDrag, event.onDragStart )
+        DragStart pos ->
+            ( TentativeDrag pos, event.onDragStart )
 
         DragEnd pos ->
             ( NotDragging, event.onDragEnd )
 
-        DragAt pos ->
-            if dragState == TentativeDrag || dragState == Dragging then
-                ( Dragging, event.onDragAt pos )
+        DragAt newPos ->
+            case dragState of
+                NotDragging ->
+                    ( dragState, Nothing )
 
-            else
-                ( dragState, Nothing )
+                TentativeDrag oldPos ->
+                    ( Dragging newPos, event.onDragAt (calcDelta newPos oldPos) )
+
+                Dragging oldPos ->
+                    ( Dragging newPos, event.onDragAt (calcDelta newPos oldPos) )
 
 
 positionDecoder : Decoder Position
@@ -96,3 +100,15 @@ positionDecoder =
     Decode.map2 Position
         (field "pageX" Decode.float)
         (field "pageY" Decode.float)
+
+
+baseDecoder : Decoder Msg
+baseDecoder =
+    Decode.map DragStart positionDecoder
+
+
+calcDelta : Position -> Position -> Position
+calcDelta end start =
+    { x = end.x - start.x
+    , y = end.y - start.y
+    }

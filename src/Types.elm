@@ -2,7 +2,7 @@ module Types exposing (Position, FCNode, FCChart)
 
 {-| Position of canvas or node
 
-        pos = IPosition 10 10
+        pos = Position 10 10
 -}
 type alias Position =
     {

@@ -60,7 +60,10 @@ update msg mod =
             Draggable.update dragConfig dragMsg mod
 
         OnDragAt pos ->
-            ( {mod | position = pos}, Cmd.none )
+            let
+                newPos = {x = mod.position.x + pos.x, y = mod.position.y + pos.y}
+            in
+            ( {mod | position = newPos}, Cmd.none )
 
 
 view : Model -> Html Msg
