@@ -1,43 +1,84 @@
-module Counter exposing (..)
+module Main exposing (Model, Msg(..), dragConfig, init, main, subscriptions, update, view)
 
+import Browser
 import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
-import Browser exposing (..)
+import Html.Attributes as A
+import Types exposing (Position)
+import Utils.Draggable as Draggable
 
 
-main : Program () Model Action
+main : Program () Model Msg
 main =
-  Browser.element { init = init, view = view, update = update, subscriptions = always Sub.none }
+    Browser.element { init = init, view = view, update = update, subscriptions = subscriptions }
+
 
 
 -- MODEL
 
-type Action = Increment | Decrement
 
-type alias Model = Int
+type alias Model =
+    { position : Position, dragState : Draggable.DragState }
 
 
-init : () -> (Model, Cmd Action)
+type Msg
+    = DragMsg Draggable.Msg
+    | OnDragAt
+
+
+init : () -> ( Model, Cmd Msg )
 init _ =
-  (
-    0,
-    Cmd.none
-  )
+    ( { position = Position 20 20, dragState = Draggable.init }
+    , Cmd.none
+    )
+
+
+
+-- SUB
+
+
+dragConfig : Draggable.Event Msg
+dragConfig =
+    { onDragStart = Nothing
+    , onDragAt = Just OnDragAt
+    , onDragEnd = Nothing
+    }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Draggable.subscriptions DragMsg model.dragState
+
 
 
 -- UPDATE
 
-update : Action -> Model -> (Model, Cmd Action)
-update act count =
-  case act of
-    Increment -> (count + 1, Cmd.none)
-    Decrement -> (count - 1, Cmd.none)
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg mod =
+    case msg of
+        DragMsg dragMsg ->
+            Draggable.update dragConfig dragMsg mod
+
+        OnDragAt ->
+            let
+                _ =
+                    Debug.log "mouse move" mod
+            in
+            ( mod, Cmd.none )
 
 
-view : Model -> Html Action
+view : Model -> Html Msg
 view mod =
-  div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [] [ text (String.fromInt mod) ]
-    , button [ onClick Increment ] [ text "+" ]
-    ]
+    let
+        translate =
+            "translate(" ++ String.fromFloat mod.position.x ++ "px, " ++ String.fromFloat mod.position.y ++ "px)"
+    in
+    div
+        [ A.style "transform" translate
+        , A.style "padding" "16px"
+        , A.style "background-color" "lightgray"
+        , A.style "width" "64px"
+        , A.style "cursor" "move"
+        , Draggable.enableDragging DragMsg
+        ]
+        [ Html.text "Drag me" ]
