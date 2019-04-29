@@ -22,7 +22,7 @@ type alias Model =
 
 type Msg
     = DragMsg Draggable.Msg
-    | OnDragAt
+    | OnDragAt Position
 
 
 init : () -> ( Model, Cmd Msg )
@@ -39,7 +39,7 @@ init _ =
 dragConfig : Draggable.Event Msg
 dragConfig =
     { onDragStart = Nothing
-    , onDragAt = Just OnDragAt
+    , onDragAt = Just << OnDragAt
     , onDragEnd = Nothing
     }
 
@@ -59,12 +59,8 @@ update msg mod =
         DragMsg dragMsg ->
             Draggable.update dragConfig dragMsg mod
 
-        OnDragAt ->
-            let
-                _ =
-                    Debug.log "mouse move" mod
-            in
-            ( mod, Cmd.none )
+        OnDragAt pos ->
+            ( {mod | position = pos}, Cmd.none )
 
 
 view : Model -> Html Msg

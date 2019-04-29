@@ -22,7 +22,7 @@ type Msg
 
 type alias Event msg =
     { onDragStart : Maybe msg
-    , onDragAt : Maybe msg
+    , onDragAt : Position -> Maybe msg
     , onDragEnd : Maybe msg
     }
 
@@ -85,7 +85,7 @@ updateInternal event msg dragState =
 
         DragAt pos ->
             if dragState == TentativeDrag || dragState == Dragging then
-                ( Dragging, event.onDragAt )
+                ( Dragging, event.onDragAt pos )
 
             else
                 ( dragState, Nothing )
@@ -94,5 +94,5 @@ updateInternal event msg dragState =
 positionDecoder : Decoder Position
 positionDecoder =
     Decode.map2 Position
-        (field "offsetX" Decode.float)
-        (field "offsetY" Decode.float)
+        (field "pageX" Decode.float)
+        (field "pageY" Decode.float)
