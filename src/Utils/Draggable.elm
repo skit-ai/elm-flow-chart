@@ -16,13 +16,13 @@ type DragState
 
 type Msg
     = DragStart Position
-    | DragAt Position
+    | DragBy Position
     | DragEnd Position
 
 
 type alias Event msg =
     { onDragStart : Maybe msg
-    , onDragAt : Position -> Maybe msg
+    , onDragBy : Position -> Maybe msg
     , onDragEnd : Maybe msg
     }
 
@@ -39,7 +39,7 @@ subscriptions envelope dragState =
             Sub.none
 
         _ ->
-            [ Browser.Events.onMouseMove (Decode.map DragAt positionDecoder)
+            [ Browser.Events.onMouseMove (Decode.map DragBy positionDecoder)
             , Browser.Events.onMouseUp (Decode.map DragEnd positionDecoder)
             ]
                 |> Sub.batch
@@ -83,16 +83,16 @@ updateInternal event msg dragState =
         DragEnd pos ->
             ( NotDragging, event.onDragEnd )
 
-        DragAt newPos ->
+        DragBy newPos ->
             case dragState of
                 NotDragging ->
                     ( dragState, Nothing )
 
                 TentativeDrag oldPos ->
-                    ( Dragging newPos, event.onDragAt (calcDelta newPos oldPos) )
+                    ( Dragging newPos, event.onDragBy (calcDelta newPos oldPos) )
 
                 Dragging oldPos ->
-                    ( Dragging newPos, event.onDragAt (calcDelta newPos oldPos) )
+                    ( Dragging newPos, event.onDragBy (calcDelta newPos oldPos) )
 
 
 positionDecoder : Decoder Position

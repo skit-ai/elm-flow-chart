@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg(..), dragConfig, init, main, subscriptions, update, view)
+module Main exposing (Model, Msg(..), dragEvent, init, main, subscriptions, update, view)
 
 import Browser
 import Html exposing (Html, button, div, text)
@@ -22,7 +22,7 @@ type alias Model =
 
 type Msg
     = DragMsg Draggable.Msg
-    | OnDragAt Position
+    | OnDragBy Position
 
 
 init : () -> ( Model, Cmd Msg )
@@ -36,10 +36,10 @@ init _ =
 -- SUB
 
 
-dragConfig : Draggable.Event Msg
-dragConfig =
+dragEvent : Draggable.Event Msg
+dragEvent =
     { onDragStart = Nothing
-    , onDragAt = Just << OnDragAt
+    , onDragBy = Just << OnDragBy
     , onDragEnd = Nothing
     }
 
@@ -57,13 +57,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg mod =
     case msg of
         DragMsg dragMsg ->
-            Draggable.update dragConfig dragMsg mod
+            Draggable.update dragEvent dragMsg mod
 
-        OnDragAt pos ->
+        OnDragBy pos ->
             let
-                newPos = {x = mod.position.x + pos.x, y = mod.position.y + pos.y}
+                newPos =
+                    { x = mod.position.x + pos.x, y = mod.position.y + pos.y }
             in
-            ( {mod | position = newPos}, Cmd.none )
+            ( { mod | position = newPos }, Cmd.none )
 
 
 view : Model -> Html Msg
