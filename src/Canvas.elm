@@ -3,8 +3,9 @@ module Canvas exposing (Model, Msg(..), dragEvent, init, main, subscriptions, up
 import Browser
 import Html exposing (..)
 import Html.Attributes as A
-import Types exposing (Position, FCNode, FCCanvas)
+import Types exposing (Position, FCNode)
 import Utils.Draggable as Draggable
+import Node
 
 
 main : Program () Model Msg
@@ -16,8 +17,9 @@ main =
 -- MODEL
 
 type alias Model =
-    { chart : FCCanvas
+    { nodes : List (FCNode Msg)
     , viewPosition : Position
+    , numberNodes : Int
     , dragState : Draggable.DragState ()
     }
 
@@ -30,8 +32,12 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { chart = { nodes = [] }
+    ( { nodes = [
+            Node.createDefaultNode "0" (Position 10 10)
+            , Node.createDefaultNode "1" (Position 500 100)
+        ]
       , viewPosition = Position 0 0
+      , numberNodes = 2
       , dragState = Draggable.init
       }
     , Cmd.none
@@ -91,8 +97,7 @@ view mod =
             , A.style "left" (String.fromFloat mod.viewPosition.x ++ "px")
             , A.style "top" (String.fromFloat mod.viewPosition.y ++ "px")
             ]
-            [ button [ A.style "position" "absolute" ] [ text "Click Me" ]
-            ]
+            (List.map Node.viewNode mod.nodes)
         ]
 
 

@@ -1,4 +1,6 @@
-module Types exposing (Position,FCNode, FCCanvas)
+module Types exposing (Position,FCNode)
+
+import Html
 
 {-| Position of canvas or node
 
@@ -11,11 +13,8 @@ type alias Position =
     }
 
 
-type alias FCNode =
+type alias FCNode msg =
     { id : String
     , position : Position
+    , html : Html.Html msg
     }
-
-
-type alias FCCanvas =
-    { nodes : List FCNode }
