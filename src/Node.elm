@@ -2,7 +2,8 @@ module Node exposing (createNode, viewNode, createDefaultNode)
 
 import Html exposing (Html, div, button, text)
 import Html.Attributes as A
-import Types exposing (FCNode, Position)
+import Utils.Draggable as Draggable
+import Types exposing (FCNode, Position, NodeId)
 
 
 createNode : String -> Position -> Html msg -> FCNode msg
@@ -22,11 +23,12 @@ createDefaultNode id startPos =
         [ text id])
 
 
-viewNode : FCNode msg -> Html msg
-viewNode fcNode =
+viewNode : FCNode msg -> (Draggable.Msg NodeId -> msg) -> Html msg
+viewNode fcNode dragListener =
     div
         [ A.style "position" "absolute"
         , A.style "left" (String.fromFloat fcNode.position.x ++ "px")
         , A.style "top" (String.fromFloat fcNode.position.y ++ "px")
+        , Draggable.enableDragging fcNode.id dragListener
         ]
         [ fcNode.html ]

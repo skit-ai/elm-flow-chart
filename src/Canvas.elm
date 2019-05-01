@@ -3,9 +3,9 @@ module Canvas exposing (Model, Msg(..), dragEvent, init, main, subscriptions, up
 import Browser
 import Html exposing (..)
 import Html.Attributes as A
-import Types exposing (Position, FCNode)
-import Utils.Draggable as Draggable
 import Node
+import Types exposing (FCNode, NodeId, Position)
+import Utils.Draggable as Draggable
 
 
 main : Program () Model Msg
@@ -16,28 +16,32 @@ main =
 
 -- MODEL
 
+
 type alias Model =
     { nodes : List (FCNode Msg)
     , viewPosition : Position
     , numberNodes : Int
-    , dragState : Draggable.DragState ()
+    , currentlyDragging : Maybe NodeId
+    , dragState : Draggable.DragState NodeId
     }
 
 
 type Msg
-    = DragMsg (Draggable.Msg ())
+    = DragMsg (Draggable.Msg NodeId)
     | OnDragBy Position
-    | OnDragStart ()
+    | OnDragStart NodeId
+    | OnDragEnd
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { nodes = [
-            Node.createDefaultNode "0" (Position 10 10)
+    ( { nodes =
+            [ Node.createDefaultNode "0" (Position 10 10)
             , Node.createDefaultNode "1" (Position 500 100)
-        ]
+            ]
       , viewPosition = Position 0 0
       , numberNodes = 2
+      , currentlyDragging = Nothing
       , dragState = Draggable.init
       }
     , Cmd.none
@@ -48,11 +52,11 @@ init _ =
 -- SUB
 
 
-dragEvent : Draggable.Event Msg ()
+dragEvent : Draggable.Event Msg NodeId
 dragEvent =
     { onDragStartListener = Just << OnDragStart
     , onDragByListener = Just << OnDragBy
-    , onDragEndListener = Nothing
+    , onDragEndListener = Just OnDragEnd
     }
 
 
@@ -71,11 +75,29 @@ update msg mod =
         DragMsg dragMsg ->
             Draggable.update dragEvent dragMsg mod
 
-        OnDragBy deltaPos ->
-            ( { mod | viewPosition = updatePosition mod.viewPosition deltaPos }, Cmd.none )
-
         OnDragStart id ->
-            ( mod, Cmd.none )
+            ( { mod | currentlyDragging = Just id }, Cmd.none )
+
+        OnDragBy deltaPos ->
+            case mod.currentlyDragging of
+                Just "canvas" ->
+                    ( { mod | viewPosition = updatePosition mod.viewPosition deltaPos }, Cmd.none )
+
+                Nothing ->
+                    ( mod, Cmd.none )
+
+                _ ->
+                    let
+                        updateNode node =
+                            if Just node.id == mod.currentlyDragging then
+                                { node | position = updatePosition node.position deltaPos }
+                            else
+                                node
+                    in
+                    ( { mod | nodes = List.map updateNode mod.nodes }, Cmd.none )
+
+        OnDragEnd ->
+            ( { mod | currentlyDragging = Nothing }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -88,7 +110,7 @@ view mod =
         , A.style "position" "fixed"
         , A.style "cursor" "move"
         , A.style "background-color" "lightgray"
-        , Draggable.enableDragging () DragMsg
+        , Draggable.enableDragging "canvas" DragMsg
         ]
         [ div
             [ A.style "width" "0px"
@@ -97,7 +119,7 @@ view mod =
             , A.style "left" (String.fromFloat mod.viewPosition.x ++ "px")
             , A.style "top" (String.fromFloat mod.viewPosition.y ++ "px")
             ]
-            (List.map Node.viewNode mod.nodes)
+            (List.map (\node -> Node.viewNode node DragMsg) mod.nodes)
         ]
 
 

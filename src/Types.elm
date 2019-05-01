@@ -1,6 +1,7 @@
-module Types exposing (Position,FCNode)
+module Types exposing (FCNode, NodeId, Position)
 
 import Html
+
 
 {-| Position of canvas or node
 
@@ -13,8 +14,12 @@ type alias Position =
     }
 
 
+type alias NodeId =
+    String
+
+
 type alias FCNode msg =
-    { id : String
+    { id : NodeId
     , position : Position
     , html : Html.Html msg
     }
