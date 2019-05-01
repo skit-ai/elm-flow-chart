@@ -3,7 +3,7 @@ module Node exposing (createNode, viewNode, createDefaultNode)
 import Html exposing (Html, div, button, text)
 import Html.Attributes as A
 import Utils.Draggable as Draggable
-import Types exposing (FCNode, Position, NodeId)
+import Types exposing (FCNode, Position)
 
 
 createNode : String -> Position -> Html msg -> FCNode msg
@@ -23,7 +23,7 @@ createDefaultNode id startPos =
         [ text id])
 
 
-viewNode : FCNode msg -> (Draggable.Msg NodeId -> msg) -> Html msg
+viewNode : FCNode msg -> (Draggable.Msg String -> msg) -> Html msg
 viewNode fcNode dragListener =
     div
         [ A.style "position" "absolute"

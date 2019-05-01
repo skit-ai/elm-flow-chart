@@ -4,7 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes as A
 import Node
-import Types exposing (FCNode, NodeId, Position)
+import Types exposing (FCNode, Position)
 import Utils.Draggable as Draggable
 
 
@@ -15,6 +15,10 @@ main =
 
 
 -- MODEL
+
+
+type alias NodeId =
+    String
 
 
 type alias Model =
@@ -91,6 +95,7 @@ update msg mod =
                         updateNode node =
                             if Just node.id == mod.currentlyDragging then
                                 { node | position = updatePosition node.position deltaPos }
+
                             else
                                 node
                     in
@@ -109,7 +114,7 @@ view mod =
         , A.style "overflow" "hidden"
         , A.style "position" "fixed"
         , A.style "cursor" "move"
-        , A.style "background-color" "lightgray"
+        , A.style "background-color" "lightgrey"
         , Draggable.enableDragging "canvas" DragMsg
         ]
         [ div

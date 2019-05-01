@@ -1,4 +1,4 @@
-module Types exposing (FCNode, NodeId, Position)
+module Types exposing (FCNode, Position)
 
 import Html
 
@@ -14,12 +14,13 @@ type alias Position =
     }
 
 
-type alias NodeId =
-    String
-
-
 type alias FCNode msg =
-    { id : NodeId
+    { id : String
     , position : Position
     , html : Html.Html msg
+    }
+
+
+type alias FCPort =
+    { id : String
     }
