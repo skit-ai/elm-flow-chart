@@ -86,18 +86,19 @@ update msg mod =
             ( { mod | currentlyDragging = Nothing }, Cmd.none )
 
 
-view : Model -> Html Msg
-view mod =
+view : Model -> List (Html.Attribute Msg) -> Html Msg
+view mod canvasStyle =
     div
-        [ A.id "fc-canvas"
-        , A.style "width" "97%"
-        , A.style "height" "580px"
-        , A.style "overflow" "hidden"
-        , A.style "position" "fixed"
-        , A.style "cursor" "move"
-        , A.style "background-color" "lightgrey"
-        , Draggable.enableDragging "canvas" DragMsg
-        ]
+        ([ A.style "width" "700px"
+         , A.style "height" "580px"
+         , A.style "overflow" "hidden"
+         , A.style "position" "fixed"
+         , A.style "cursor" "move"
+         , A.style "background-color" "lightgrey"
+         , Draggable.enableDragging "canvas" DragMsg
+         ]
+            ++ canvasStyle
+        )
         [ div
             [ A.style "width" "0px"
             , A.style "height" "0px"

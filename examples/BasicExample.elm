@@ -3,7 +3,7 @@ module BasicExample exposing (Model, Msg(..), init, main, update, view)
 import Browser
 import FCCanvas
 import Html exposing (Html, div, text)
-import Utils.CmdExtra as CmdExtra
+import Html.Attributes as A
 
 
 main : Program () Model Msg
@@ -27,6 +27,7 @@ init _ =
     , Cmd.none
     )
 
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.map CanvasMsg (FCCanvas.subscriptions model.canvas)
@@ -47,5 +48,10 @@ view : Model -> Html Msg
 view mod =
     div []
         [ text "hello world"
-          , Html.map CanvasMsg (FCCanvas.view mod.canvas)
+        , Html.map CanvasMsg
+            (FCCanvas.view mod.canvas
+                [ A.style "height" "600px"
+                , A.style "width" "85%"
+                ]
+            )
         ]
