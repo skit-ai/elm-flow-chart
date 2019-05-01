@@ -1,9 +1,7 @@
 # IDEs
 .vscode
 
-# dependencies
-/node_modules
-
 # build
 /build
 /elm-stuff
+examples/elm-stuff

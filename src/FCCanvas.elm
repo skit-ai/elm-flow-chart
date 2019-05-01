@@ -1,4 +1,4 @@
-module Canvas exposing (Model, Msg(..), dragEvent, init, main, subscriptions, update, view)
+module FCCanvas exposing (Model, Msg, init, subscriptions, update, view)
 
 import Browser
 import Html exposing (..)
@@ -8,60 +8,41 @@ import Types exposing (FCNode, Position)
 import Utils.Draggable as Draggable
 
 
-main : Program () Model Msg
-main =
-    Browser.element { init = init, view = view, update = update, subscriptions = subscriptions }
-
-
 
 -- MODEL
-
-
-type alias NodeId =
-    String
 
 
 type alias Model =
     { nodes : List (FCNode Msg)
     , viewPosition : Position
     , numberNodes : Int
-    , currentlyDragging : Maybe NodeId
-    , dragState : Draggable.DragState NodeId
+    , currentlyDragging : Maybe String
+    , dragState : Draggable.DragState
     }
 
 
 type Msg
-    = DragMsg (Draggable.Msg NodeId)
+    = DragMsg (Draggable.Msg String)
     | OnDragBy Position
-    | OnDragStart NodeId
+    | OnDragStart String
     | OnDragEnd
 
 
-init : () -> ( Model, Cmd Msg )
+init : () -> Model
 init _ =
-    ( { nodes =
-            [ Node.createDefaultNode "0" (Position 10 10)
-            , Node.createDefaultNode "1" (Position 500 100)
-            ]
-      , viewPosition = Position 0 0
-      , numberNodes = 2
-      , currentlyDragging = Nothing
-      , dragState = Draggable.init
-      }
-    , Cmd.none
-    )
+    { nodes =
+        [ Node.createDefaultNode "0" (Position 10 10)
+        , Node.createDefaultNode "1" (Position 500 100)
+        ]
+    , viewPosition = Position 0 0
+    , numberNodes = 2
+    , currentlyDragging = Nothing
+    , dragState = Draggable.init
+    }
 
 
 
 -- SUB
-
-
-dragEvent : Draggable.Event Msg NodeId
-dragEvent =
-    { onDragStartListener = Just << OnDragStart
-    , onDragByListener = Just << OnDragBy
-    , onDragEndListener = Just OnDragEnd
-    }
 
 
 subscriptions : Model -> Sub Msg
@@ -130,6 +111,14 @@ view mod =
 
 
 -- HELPER FUNCTIONS
+
+
+dragEvent : Draggable.Event Msg String
+dragEvent =
+    { onDragStartListener = Just << OnDragStart
+    , onDragByListener = Just << OnDragBy
+    , onDragEndListener = Just OnDragEnd
+    }
 
 
 updatePosition : Position -> Position -> Position

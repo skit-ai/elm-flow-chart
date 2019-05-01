@@ -1,4 +1,4 @@
-module Utils.Draggable exposing (DragState, Event, Msg, enableDragging, init, subscriptions, update, move)
+module Utils.Draggable exposing (DragState, Event, Msg, enableDragging, init, move, subscriptions, update)
 
 import Browser.Events
 import Html
@@ -8,7 +8,7 @@ import Types exposing (Position)
 import Utils.CmdExtra as CmdExtra
 
 
-type DragState id
+type DragState
     = NotDragging
     | TentativeDrag Position
     | Dragging Position
@@ -27,12 +27,12 @@ type alias Event msg id =
     }
 
 
-init : DragState id
+init : DragState
 init =
     NotDragging
 
 
-subscriptions : (Msg id -> msg) -> DragState id -> Sub msg
+subscriptions : (Msg id -> msg) -> DragState -> Sub msg
 subscriptions envelope dragState =
     case dragState of
         NotDragging ->
@@ -55,8 +55,8 @@ enableDragging key target =
 update :
     Event msg id
     -> Msg id
-    -> { m | dragState : DragState id }
-    -> ( { m | dragState : DragState id }, Cmd msg )
+    -> { m | dragState : DragState }
+    -> ( { m | dragState : DragState }, Cmd msg )
 update event msg model =
     let
         ( newDrag, newMsgMaybe ) =
@@ -78,7 +78,7 @@ alwaysPreventDefaultAndStopPropagation msg =
     { message = msg, stopPropagation = True, preventDefault = True }
 
 
-updateInternal : Event msg id -> Msg id -> DragState id -> ( DragState id, Maybe msg )
+updateInternal : Event msg id -> Msg id -> DragState -> ( DragState, Maybe msg )
 updateInternal event msg dragState =
     case msg of
         DragStart id pos ->
