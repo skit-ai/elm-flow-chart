@@ -1,10 +1,11 @@
-module FCCanvas exposing (Model, Msg, init, subscriptions, update, view)
+module FCCanvas exposing (Model, Msg, addNode, init, subscriptions, update, view)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes as A
 import Node
 import Types exposing (FCNode, Position)
+import Utils.CmdExtra as CmdExtra
 import Utils.Draggable as Draggable
 
 
@@ -13,11 +14,11 @@ import Utils.Draggable as Draggable
 
 
 type alias Model =
-    { nodes : List (FCNode Msg)
+    { nodes : List FCNode
     , viewPosition : Position
-    , numberNodes : Int
     , currentlyDragging : Maybe String
     , dragState : Draggable.DragState
+    , nodeMap : String -> Html Msg
     }
 
 
@@ -26,19 +27,23 @@ type Msg
     | OnDragBy Position
     | OnDragStart String
     | OnDragEnd
+    | AddNode FCNode
+    | RemoveNode FCNode
 
 
-init : () -> Model
-init _ =
-    { nodes =
-        [ Node.createDefaultNode "0" (Position 10 10)
-        , Node.createDefaultNode "1" (Position 500 100)
-        ]
+init : (String -> Html Msg) -> Model
+init nodeMap =
+    { nodes = []
     , viewPosition = Position 0 0
-    , numberNodes = 2
     , currentlyDragging = Nothing
     , dragState = Draggable.init
+    , nodeMap = nodeMap
     }
+
+
+addNode : FCNode -> Cmd Msg
+addNode newNode =
+    CmdExtra.message (AddNode newNode)
 
 
 
@@ -85,6 +90,12 @@ update msg mod =
         OnDragEnd ->
             ( { mod | currentlyDragging = Nothing }, Cmd.none )
 
+        AddNode newNode ->
+            ( { mod | nodes = mod.nodes ++ [ newNode ] }, Cmd.none )
+
+        RemoveNode node ->
+            ( { mod | nodes = List.filter (\n -> n.id /= node.id) mod.nodes }, Cmd.none )
+
 
 view : Model -> List (Html.Attribute Msg) -> Html Msg
 view mod canvasStyle =
@@ -106,7 +117,12 @@ view mod canvasStyle =
             , A.style "left" (String.fromFloat mod.viewPosition.x ++ "px")
             , A.style "top" (String.fromFloat mod.viewPosition.y ++ "px")
             ]
-            (List.map (\node -> Node.viewNode node DragMsg) mod.nodes)
+            (List.map
+                (\node ->
+                    Node.viewNode node DragMsg (mod.nodeMap node.nodeType)
+                )
+                mod.nodes
+            )
         ]
 
 

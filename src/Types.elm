@@ -14,10 +14,10 @@ type alias Position =
     }
 
 
-type alias FCNode msg =
+type alias FCNode =
     { id : String
     , position : Position
-    , html : Html.Html msg
+    , nodeType : String
     }
 
 
