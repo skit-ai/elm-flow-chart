@@ -3,7 +3,7 @@ module Node exposing (createNode, viewNode)
 import Html exposing (Html, div, button, text)
 import Html.Attributes as A
 import Utils.Draggable as Draggable
-import Types exposing (FCNode, Position)
+import FlowChart.Types exposing (FCNode, Position)
 
 
 createNode : String -> Position -> String -> FCNode

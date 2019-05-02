@@ -4,7 +4,7 @@ import Browser.Events
 import Html
 import Html.Events
 import Json.Decode as Decode
-import Types exposing (Position)
+import FlowChart.Types exposing (Position)
 import Utils.CmdExtra as CmdExtra
 
 

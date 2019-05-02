@@ -1,10 +1,10 @@
-module FCCanvas exposing (Model, Msg, addNode, init, subscriptions, update, view)
+module FlowChart exposing (Model, Msg, addNode, init, subscriptions, update, view)
 
 import Browser
+import FlowChart.Types exposing (FCCanvas, FCNode, Position)
 import Html exposing (..)
 import Html.Attributes as A
 import Node
-import Types exposing (FCNode, Position)
 import Utils.CmdExtra as CmdExtra
 import Utils.Draggable as Draggable
 
@@ -14,8 +14,7 @@ import Utils.Draggable as Draggable
 
 
 type alias Model =
-    { nodes : List FCNode
-    , viewPosition : Position
+    { canvas : FCCanvas
     , currentlyDragging : Maybe String
     , dragState : Draggable.DragState
     , nodeMap : String -> Html Msg
@@ -31,10 +30,9 @@ type Msg
     | RemoveNode FCNode
 
 
-init : List FCNode -> (String -> Html Msg) -> Model
-init nodes nodeMap =
-    { nodes = nodes
-    , viewPosition = Position 0 0
+init : FCCanvas -> (String -> Html Msg) -> Model
+init canvas nodeMap =
+    { canvas = canvas
     , currentlyDragging = Nothing
     , dragState = Draggable.init
     , nodeMap = nodeMap
@@ -71,7 +69,18 @@ update msg mod =
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
                 Just "canvas" ->
-                    ( { mod | viewPosition = updatePosition mod.viewPosition deltaPos }, Cmd.none )
+                    let
+                        canvas =
+                            mod.canvas
+                    in
+                    ( { mod
+                        | canvas =
+                            { canvas
+                                | position = updatePosition canvas.position deltaPos
+                            }
+                      }
+                    , Cmd.none
+                    )
 
                 Nothing ->
                     ( mod, Cmd.none )
@@ -85,16 +94,22 @@ update msg mod =
                             else
                                 node
                     in
-                    ( { mod | nodes = List.map updateNode mod.nodes }, Cmd.none )
+                    ( { mod | canvas = updateCanvasNodes mod.canvas (List.map updateNode mod.canvas.nodes) }, Cmd.none )
 
         OnDragEnd ->
             ( { mod | currentlyDragging = Nothing }, Cmd.none )
 
         AddNode newNode ->
-            ( { mod | nodes = mod.nodes ++ [ newNode ] }, Cmd.none )
+            ( { mod | canvas = updateCanvasNodes mod.canvas (mod.canvas.nodes ++ [ newNode ]) }, Cmd.none )
 
         RemoveNode node ->
-            ( { mod | nodes = List.filter (\n -> n.id /= node.id) mod.nodes }, Cmd.none )
+            ( { mod
+                | canvas =
+                    updateCanvasNodes mod.canvas
+                        (List.filter (.id >> (/=) node.id) mod.canvas.nodes)
+              }
+            , Cmd.none
+            )
 
 
 view : Model -> List (Html.Attribute Msg) -> Html Msg
@@ -114,14 +129,14 @@ view mod canvasStyle =
             [ A.style "width" "0px"
             , A.style "height" "0px"
             , A.style "position" "absolute"
-            , A.style "left" (String.fromFloat mod.viewPosition.x ++ "px")
-            , A.style "top" (String.fromFloat mod.viewPosition.y ++ "px")
+            , A.style "left" (String.fromFloat mod.canvas.position.x ++ "px")
+            , A.style "top" (String.fromFloat mod.canvas.position.y ++ "px")
             ]
             (List.map
                 (\node ->
                     Node.viewNode node DragMsg (mod.nodeMap node.nodeType)
                 )
-                mod.nodes
+                mod.canvas.nodes
             )
         ]
 
@@ -141,3 +156,8 @@ dragEvent =
 updatePosition : Position -> Position -> Position
 updatePosition oldPos deltaPos =
     { x = oldPos.x + deltaPos.x, y = oldPos.y + deltaPos.y }
+
+
+updateCanvasNodes : FCCanvas -> List FCNode -> FCCanvas
+updateCanvasNodes canvas nodes =
+    { canvas | nodes = nodes }

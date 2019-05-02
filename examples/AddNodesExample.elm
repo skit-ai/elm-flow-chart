@@ -1,11 +1,11 @@
 module AddNodesExample exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import FCCanvas
+import FlowChart
 import Html exposing (..)
 import Html.Attributes as A
 import Html.Events
-import Types
+import FlowChart.Types as FCTypes
 
 
 main : Program () Model Msg
@@ -14,22 +14,25 @@ main =
 
 
 type alias Model =
-    { canvasModel : FCCanvas.Model
+    { canvasModel : FlowChart.Model
     , noOfNodes : Int
     }
 
 
 type Msg
-    = CanvasMsg FCCanvas.Msg
+    = CanvasMsg FlowChart.Msg
     | AddNode
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { canvasModel =
-            FCCanvas.init
-                [ createNode "0" (Types.Position 100 200)
-                ]
+            FlowChart.init
+                { nodes =
+                    [ createNode "0" (FCTypes.Position 100 200)
+                    ]
+                , position = FCTypes.Position 0 0
+                }
                 nodeToHtml
       , noOfNodes = 1
       }
@@ -39,7 +42,7 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.map CanvasMsg (FCCanvas.subscriptions model.canvasModel)
+    Sub.map CanvasMsg (FlowChart.subscriptions model.canvasModel)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -48,15 +51,15 @@ update msg model =
         CanvasMsg cMsg ->
             let
                 ( canvasModel, canvasCmd ) =
-                    FCCanvas.update cMsg model.canvasModel
+                    FlowChart.update cMsg model.canvasModel
             in
             ( { model | canvasModel = canvasModel }, Cmd.map CanvasMsg canvasCmd )
 
         AddNode ->
             let
                 cCmd =
-                    FCCanvas.addNode
-                        (createNode (String.fromInt model.noOfNodes) (Types.Position 10 10))
+                    FlowChart.addNode
+                        (createNode (String.fromInt model.noOfNodes) (FCTypes.Position 10 10))
             in
             ( { model | noOfNodes = model.noOfNodes + 1 }, Cmd.map CanvasMsg cCmd )
 
@@ -66,7 +69,7 @@ view mod =
     div []
         [ button [ Html.Events.onClick AddNode ] [ text "AddNode" ]
         , Html.map CanvasMsg
-            (FCCanvas.view mod.canvasModel
+            (FlowChart.view mod.canvasModel
                 [ A.style "height" "600px"
                 , A.style "width" "85%"
                 ]
@@ -74,7 +77,7 @@ view mod =
         ]
 
 
-nodeToHtml : String -> Html FCCanvas.Msg
+nodeToHtml : String -> Html FlowChart.Msg
 nodeToHtml nodeType =
     div
         [ A.style "width" "40px"
@@ -89,7 +92,7 @@ nodeToHtml nodeType =
 -- HELPER FUNCTIONS
 
 
-createNode : String -> Types.Position -> Types.FCNode
+createNode : String -> FCTypes.Position -> FCTypes.FCNode
 createNode id position =
     { position = position
     , id = id
