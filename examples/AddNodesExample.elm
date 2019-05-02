@@ -1,4 +1,4 @@
-module BasicExample exposing (Model, Msg(..), init, main, update, view)
+module AddNodesExample exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import FCCanvas
@@ -15,21 +15,23 @@ main =
 
 type alias Model =
     { canvasModel : FCCanvas.Model
+    , noOfNodes : Int
     }
 
 
 type Msg
     = CanvasMsg FCCanvas.Msg
+    | AddNode
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { canvasModel =
             FCCanvas.init
-                [ createNode "0" (Types.Position 10 10)
-                , createNode "1" (Types.Position 100 200)
+                [ createNode "0" (Types.Position 100 200)
                 ]
                 nodeToHtml
+      , noOfNodes = 1
       }
     , Cmd.none
     )
@@ -50,11 +52,20 @@ update msg model =
             in
             ( { model | canvasModel = canvasModel }, Cmd.map CanvasMsg canvasCmd )
 
+        AddNode ->
+            let
+                cCmd =
+                    FCCanvas.addNode
+                        (createNode (String.fromInt model.noOfNodes) (Types.Position 10 10))
+            in
+            ( { model | noOfNodes = model.noOfNodes + 1 }, Cmd.map CanvasMsg cCmd )
+
 
 view : Model -> Html Msg
 view mod =
     div []
-        [ Html.map CanvasMsg
+        [ button [ Html.Events.onClick AddNode ] [ text "AddNode" ]
+        , Html.map CanvasMsg
             (FCCanvas.view mod.canvasModel
                 [ A.style "height" "600px"
                 , A.style "width" "85%"

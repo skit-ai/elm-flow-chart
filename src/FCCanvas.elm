@@ -31,9 +31,9 @@ type Msg
     | RemoveNode FCNode
 
 
-init : (String -> Html Msg) -> Model
-init nodeMap =
-    { nodes = []
+init : List FCNode -> (String -> Html Msg) -> Model
+init nodes nodeMap =
+    { nodes = nodes
     , viewPosition = Position 0 0
     , currentlyDragging = Nothing
     , dragState = Draggable.init
