@@ -3,7 +3,6 @@ module FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Position)
 {-| Position of canvas or node
 
         pos = Position 10 10
-
 -}
 type alias Position =
     { x : Float
@@ -15,11 +14,13 @@ type alias FCNode =
     { id : String
     , position : Position
     , nodeType : String
+    , ports : List FCPort
     }
 
 
 type alias FCPort =
     { id : String
+    , position : Position
     }
 
 

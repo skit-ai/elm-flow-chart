@@ -2,10 +2,10 @@ module BasicExample exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import FlowChart
+import FlowChart.Types as FCTypes
 import Html exposing (..)
 import Html.Attributes as A
 import Html.Events
-import FlowChart.Types as FCTypes
 
 
 main : Program () Model Msg
@@ -86,4 +86,8 @@ createNode id position =
     { position = position
     , id = id
     , nodeType = "default"
+    , ports =
+        [ { id = "node-" ++ id ++ "0", position = FCTypes.Position 0.42 0.8 }
+        , { id = "node-" ++ id ++ "1", position = FCTypes.Position 0.42 0 }
+        ]
     }

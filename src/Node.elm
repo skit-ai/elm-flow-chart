@@ -1,14 +1,9 @@
-module Node exposing (createNode, viewNode)
+module Node exposing (viewNode)
 
-import Html exposing (Html, div, button, text)
+import FlowChart.Types exposing (FCNode, FCPort, Position)
+import Html exposing (Html, button, div, text)
 import Html.Attributes as A
 import Utils.Draggable as Draggable
-import FlowChart.Types exposing (FCNode, Position)
-
-
-createNode : String -> Position -> String -> FCNode
-createNode id startPos nodeType =
-    { position = startPos, id = id, nodeType = nodeType }
 
 
 viewNode : FCNode -> (Draggable.Msg String -> msg) -> Html msg -> Html msg
@@ -19,4 +14,20 @@ viewNode fcNode dragListener children =
         , A.style "top" (String.fromFloat fcNode.position.y ++ "px")
         , Draggable.enableDragging fcNode.id dragListener
         ]
-        [ children ]
+        ([ children ]
+            ++ List.map viewPort fcNode.ports
+        )
+
+
+viewPort : FCPort -> Html msg
+viewPort fcPort =
+    div
+        [ A.style "background" "grey"
+        , A.style "width" "20px"
+        , A.style "height" "20px"
+        , A.style "position" "absolute"
+        , A.style "cursor" "pointer"
+        , A.style "top" (String.fromFloat (fcPort.position.y * 100) ++ "%")
+        , A.style "left" (String.fromFloat (fcPort.position.x * 100) ++ "%")
+        ]
+        []

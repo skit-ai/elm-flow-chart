@@ -97,4 +97,7 @@ createNode id position =
     { position = position
     , id = id
     , nodeType = "default"
+    , ports =
+        [ { id = "node-" ++ id ++ "0", position = FCTypes.Position 0.42 0.8 }
+        ]
     }
