@@ -1,10 +1,10 @@
 module Utils.Draggable exposing (DragState, Event, Msg, enableDragging, init, move, subscriptions, update)
 
 import Browser.Events
+import FlowChart.Types exposing (Position)
 import Html
 import Html.Events
 import Json.Decode as Decode
-import FlowChart.Types exposing (Position)
 import Utils.CmdExtra as CmdExtra
 
 
@@ -21,7 +21,7 @@ type Msg id
 
 
 type alias Event msg id =
-    { onDragStartListener : id -> Maybe msg
+    { onDragStartListener : id -> Position -> Maybe msg
     , onDragByListener : Position -> Maybe msg
     , onDragEndListener : Maybe msg
     }
@@ -70,6 +70,7 @@ move pos =
     "translate(" ++ String.fromFloat pos.x ++ "px, " ++ String.fromFloat pos.y ++ "px)"
 
 
+
 -- HELPER FUNCS
 
 
@@ -82,7 +83,7 @@ updateInternal : Event msg id -> Msg id -> DragState -> ( DragState, Maybe msg )
 updateInternal event msg dragState =
     case msg of
         DragStart id pos ->
-            ( TentativeDrag pos, event.onDragStartListener id )
+            ( TentativeDrag pos, event.onDragStartListener id pos )
 
         DragEnd pos ->
             ( NotDragging, event.onDragEndListener )

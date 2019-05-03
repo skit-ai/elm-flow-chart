@@ -4,12 +4,16 @@ import Browser
 import Dict exposing (Dict)
 import DraggableTypes exposing (DraggableTypes(..))
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Position)
-import Html exposing (..)
+import Html exposing (Html, div)
 import Html.Attributes as A
 import Link
 import Node
+import Random
+import Svg exposing (Svg, svg)
+import Svg.Attributes
 import Utils.CmdExtra as CmdExtra
 import Utils.Draggable as Draggable
+import Utils.RandomExtra as RandomExtra
 
 
 
@@ -19,7 +23,7 @@ import Utils.Draggable as Draggable
 type alias Model =
     { position : Position
     , nodes : Dict String FCNode
-    , links : List FCLink
+    , links : Dict String FCLink
     , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
     , nodeMap : String -> Html Msg
@@ -29,10 +33,11 @@ type alias Model =
 type Msg
     = DragMsg (Draggable.Msg DraggableTypes)
     | OnDragBy Position
-    | OnDragStart DraggableTypes
+    | OnDragStart DraggableTypes Position
     | OnDragEnd
     | AddNode FCNode
     | RemoveNode FCNode
+    | AddLink FCLink String FCPort String
     | RemoveLink FCLink
 
 
@@ -40,7 +45,7 @@ init : FCCanvas -> (String -> Html Msg) -> Model
 init canvas nodeMap =
     { position = canvas.position
     , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
-    , links = canvas.links
+    , links = Dict.empty
     , currentlyDragging = None
     , dragState = Draggable.init
     , nodeMap = nodeMap
@@ -71,8 +76,21 @@ update msg mod =
         DragMsg dragMsg ->
             Draggable.update dragEvent dragMsg mod
 
-        OnDragStart currentlyDragging ->
-            ( { mod | currentlyDragging = currentlyDragging }, Cmd.none )
+        OnDragStart currentlyDragging startPos ->
+            let
+                cCmd =
+                    case currentlyDragging of
+                        DPort nodeId fcPort link ->
+                            let
+                                newLink =
+                                    { id = "", from = startPos, to = startPos }
+                            in
+                            Random.generate (AddLink newLink nodeId fcPort) (RandomExtra.randomString 6)
+
+                        _ ->
+                            Cmd.none
+            in
+            ( { mod | currentlyDragging = currentlyDragging }, cCmd )
 
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
@@ -81,21 +99,22 @@ update msg mod =
 
                 DNode node ->
                     let
-                        updateNode mayBeNode =
-                            case mayBeNode of
-                                Nothing ->
-                                    Nothing
-
-                                Just n ->
-                                    Just
-                                        { n
-                                            | position = updatePosition n.position deltaPos
-                                        }
+                        updateNode fcNode =
+                            { fcNode | position = updatePosition fcNode.position deltaPos }
                     in
-                    ( { mod | nodes = Dict.update node.id updateNode mod.nodes }, Cmd.none )
+                    ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Cmd.none )
 
-                DPort nodeId fcPort ->
-                    ( mod, Cmd.none )
+                DPort nodeId fcPort maybeLink ->
+                    case maybeLink of
+                        Nothing ->
+                            ( mod, Cmd.none )
+
+                        Just k ->
+                            let
+                                updateLink fcLink =
+                                    { fcLink | to = updatePosition fcLink.to deltaPos }
+                            in
+                            ( { mod | links = Dict.update k.id (Maybe.map updateLink) mod.links }, Cmd.none )
 
                 None ->
                     ( mod, Cmd.none )
@@ -109,8 +128,21 @@ update msg mod =
         RemoveNode node ->
             ( { mod | nodes = Dict.remove node.id mod.nodes }, Cmd.none )
 
-        RemoveLink link ->
-            ( mod, Cmd.none )
+        AddLink fcLink nodeId fcPort linkId ->
+            let
+                newLink : FCLink
+                newLink =
+                    { fcLink | id = linkId }
+            in
+            ( { mod
+                | links = Dict.insert linkId newLink mod.links
+                , currentlyDragging = DPort nodeId fcPort (Just newLink)
+              }
+            , Cmd.none
+            )
+
+        RemoveLink fcLink ->
+            ( { mod | links = Dict.remove fcLink.id mod.links }, Cmd.none )
 
 
 view : Model -> List (Html.Attribute Msg) -> Html Msg
@@ -138,7 +170,10 @@ view mod canvasStyle =
                     Node.viewNode node DragMsg (mod.nodeMap node.nodeType)
                 )
                 (Dict.values mod.nodes)
-                ++ List.map (Link.viewLink mod.nodes) mod.links
+                ++ [ svg
+                        [ Svg.Attributes.overflow "visible" ]
+                        (List.map Link.viewLink (Dict.values mod.links))
+                   ]
             )
         ]
 
@@ -149,8 +184,8 @@ view mod canvasStyle =
 
 dragEvent : Draggable.Event Msg DraggableTypes
 dragEvent =
-    { onDragStartListener = Just << OnDragStart
-    , onDragByListener = Just << OnDragBy
+    { onDragStartListener = \x -> \y -> Just (OnDragStart x y)
+    , onDragByListener = OnDragBy >> Just
     , onDragEndListener = Just OnDragEnd
     }
 

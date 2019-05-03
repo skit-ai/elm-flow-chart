@@ -31,11 +31,6 @@ init _ =
                     , createNode "node-1" (FCTypes.Position 100 200)
                     ]
                 , position = FCTypes.Position 0 0
-                , links =
-                    [ FCTypes.FCLink "link-0"
-                        { nodeId = "node-0", portId = "port-node-0-1" }
-                        { nodeId = "node-1", portId = "port-node-1-0" }
-                    ]
                 }
                 nodeToHtml
       }

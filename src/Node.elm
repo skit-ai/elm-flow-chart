@@ -30,6 +30,6 @@ viewPort nodeId fcPort dragListener =
         , A.style "cursor" "pointer"
         , A.style "top" (String.fromFloat (fcPort.position.y * 100) ++ "%")
         , A.style "left" (String.fromFloat (fcPort.position.x * 100) ++ "%")
-        , Draggable.enableDragging (DPort nodeId fcPort) dragListener
+        , Draggable.enableDragging (DPort nodeId fcPort Nothing) dragListener
         ]
         []
