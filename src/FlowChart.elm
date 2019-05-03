@@ -2,6 +2,7 @@ module FlowChart exposing (Model, Msg, addNode, init, subscriptions, update, vie
 
 import Browser
 import Dict exposing (Dict)
+import DraggableTypes exposing (DraggableTypes(..))
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Position)
 import Html exposing (..)
 import Html.Attributes as A
@@ -15,27 +16,20 @@ import Utils.Draggable as Draggable
 -- MODEL
 
 
-type CurrentlyDragging
-    = DCanvas
-    | DNode String (Maybe FCNode)
-    | DPort String
-    | None
-
-
 type alias Model =
     { position : Position
     , nodes : Dict String FCNode
     , links : List FCLink
-    , currentlyDragging : CurrentlyDragging
+    , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
     , nodeMap : String -> Html Msg
     }
 
 
 type Msg
-    = DragMsg (Draggable.Msg String)
+    = DragMsg (Draggable.Msg DraggableTypes)
     | OnDragBy Position
-    | OnDragStart String
+    | OnDragStart DraggableTypes
     | OnDragEnd
     | AddNode FCNode
     | RemoveNode FCNode
@@ -77,22 +71,15 @@ update msg mod =
         DragMsg dragMsg ->
             Draggable.update dragEvent dragMsg mod
 
-        OnDragStart id ->
-            if id == "canvas" then
-                ( { mod | currentlyDragging = DCanvas }, Cmd.none )
-
-            else if Dict.member id mod.nodes then
-                ( { mod | currentlyDragging = DNode id (Dict.get id mod.nodes) }, Cmd.none )
-
-            else
-                ( { mod | currentlyDragging = DPort id }, Cmd.none )
+        OnDragStart currentlyDragging ->
+            ( { mod | currentlyDragging = currentlyDragging }, Cmd.none )
 
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
                 DCanvas ->
                     ( { mod | position = updatePosition mod.position deltaPos }, Cmd.none )
 
-                DNode nodeId node ->
+                DNode node ->
                     let
                         updateNode mayBeNode =
                             case mayBeNode of
@@ -105,9 +92,9 @@ update msg mod =
                                             | position = updatePosition n.position deltaPos
                                         }
                     in
-                    ( { mod | nodes = Dict.update nodeId updateNode mod.nodes }, Cmd.none )
+                    ( { mod | nodes = Dict.update node.id updateNode mod.nodes }, Cmd.none )
 
-                DPort id ->
+                DPort nodeId fcPort ->
                     ( mod, Cmd.none )
 
                 None ->
@@ -135,7 +122,7 @@ view mod canvasStyle =
          , A.style "position" "fixed"
          , A.style "cursor" "move"
          , A.style "background-color" "lightgrey"
-         , Draggable.enableDragging "canvas" DragMsg
+         , Draggable.enableDragging DCanvas DragMsg
          ]
             ++ canvasStyle
         )
@@ -160,7 +147,7 @@ view mod canvasStyle =
 -- HELPER FUNCTIONS
 
 
-dragEvent : Draggable.Event Msg String
+dragEvent : Draggable.Event Msg DraggableTypes
 dragEvent =
     { onDragStartListener = Just << OnDragStart
     , onDragByListener = Just << OnDragBy
