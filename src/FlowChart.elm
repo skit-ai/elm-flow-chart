@@ -87,15 +87,13 @@ update msg mod =
                     ( mod, Cmd.none )
 
                 _ ->
-                    let
-                        updateNode node =
-                            if Just node.id == mod.currentlyDragging then
-                                { node | position = updatePosition node.position deltaPos }
-
-                            else
-                                node
-                    in
-                    ( { mod | canvas = updateCanvasNodes mod.canvas (List.map updateNode mod.canvas.nodes) }, Cmd.none )
+                    ( { mod
+                        | canvas =
+                            updateCanvasNodes mod.canvas
+                                (handleNodeAndPortUpdate deltaPos mod.currentlyDragging mod.canvas.nodes)
+                      }
+                    , Cmd.none
+                    )
 
         OnDragEnd ->
             ( { mod | currentlyDragging = Nothing }, Cmd.none )
@@ -163,3 +161,16 @@ updatePosition oldPos deltaPos =
 updateCanvasNodes : FCCanvas -> List FCNode -> FCCanvas
 updateCanvasNodes canvas nodes =
     { canvas | nodes = nodes }
+
+
+handleNodeAndPortUpdate : Position -> Maybe String -> List FCNode -> List FCNode
+handleNodeAndPortUpdate deltaPos currentlyDragging nodes =
+    let
+        updateNode node =
+            if Just node.id == currentlyDragging then
+                { node | position = updatePosition node.position deltaPos }
+
+            else
+                node
+    in
+    List.map updateNode nodes

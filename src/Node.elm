@@ -15,19 +15,21 @@ viewNode fcNode dragListener children =
         , Draggable.enableDragging fcNode.id dragListener
         ]
         ([ children ]
-            ++ List.map viewPort fcNode.ports
+            ++ List.map (\p-> viewPort p dragListener) fcNode.ports
         )
 
 
-viewPort : FCPort -> Html msg
-viewPort fcPort =
+viewPort : FCPort -> (Draggable.Msg String -> msg) -> Html msg
+viewPort fcPort dragListener =
     div
-        [ A.style "background" "grey"
+        [ A.id fcPort.id
+        , A.style "background" "grey"
         , A.style "width" "20px"
         , A.style "height" "20px"
         , A.style "position" "absolute"
         , A.style "cursor" "pointer"
         , A.style "top" (String.fromFloat (fcPort.position.y * 100) ++ "%")
         , A.style "left" (String.fromFloat (fcPort.position.x * 100) ++ "%")
+        , Draggable.enableDragging fcPort.id dragListener
         ]
         []
