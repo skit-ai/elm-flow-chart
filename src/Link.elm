@@ -1,12 +1,13 @@
 module Link exposing (viewLink)
 
+import Dict exposing (Dict)
 import FlowChart.Types exposing (FCLink, FCNode, FCPort, Position)
 import Html exposing (Html, div)
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
 
 
-viewLink : List FCNode -> FCLink -> Html msg
+viewLink : Dict String FCNode -> FCLink -> Html msg
 viewLink nodes fcLink =
     let
         positions =
@@ -32,14 +33,14 @@ viewLink nodes fcLink =
             div [] []
 
 
-calcPositions : FCLink -> List FCNode -> Maybe ( Position, Position )
+calcPositions : FCLink -> Dict String FCNode -> Maybe ( Position, Position )
 calcPositions fcLink nodes =
     let
         fromPortPosition =
-            getPortPosition fcLink.from.portId (getNodeById fcLink.from.nodeId nodes)
+            getPortPosition fcLink.from.portId (Dict.get fcLink.from.nodeId nodes)
 
         toPortPosition =
-            getPortPosition fcLink.to.portId (getNodeById fcLink.to.nodeId nodes)
+            getPortPosition fcLink.to.portId (Dict.get fcLink.to.nodeId nodes)
     in
     case ( fromPortPosition, toPortPosition ) of
         ( Just fromP, Just toP ) ->
@@ -56,11 +57,6 @@ calcPositions fcLink nodes =
 positionToString : Position -> String
 positionToString pos =
     String.fromFloat pos.x ++ "," ++ String.fromFloat pos.y
-
-
-getNodeById : String -> List FCNode -> Maybe FCNode
-getNodeById id nodes =
-    List.head (List.filter (.id >> (==) id) nodes)
 
 
 getPortPosition : String -> Maybe FCNode -> Maybe Position

@@ -1,7 +1,8 @@
 module FlowChart exposing (Model, Msg, addNode, init, subscriptions, update, view)
 
 import Browser
-import FlowChart.Types exposing (FCCanvas, FCNode, Position)
+import Dict exposing (Dict)
+import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Position)
 import Html exposing (..)
 import Html.Attributes as A
 import Link
@@ -14,9 +15,18 @@ import Utils.Draggable as Draggable
 -- MODEL
 
 
+type CurrentlyDragging
+    = DCanvas
+    | DNode String (Maybe FCNode)
+    | DPort String
+    | None
+
+
 type alias Model =
-    { canvas : FCCanvas
-    , currentlyDragging : Maybe String
+    { position : Position
+    , nodes : Dict String FCNode
+    , links : List FCLink
+    , currentlyDragging : CurrentlyDragging
     , dragState : Draggable.DragState
     , nodeMap : String -> Html Msg
     }
@@ -29,12 +39,15 @@ type Msg
     | OnDragEnd
     | AddNode FCNode
     | RemoveNode FCNode
+    | RemoveLink FCLink
 
 
 init : FCCanvas -> (String -> Html Msg) -> Model
 init canvas nodeMap =
-    { canvas = canvas
-    , currentlyDragging = Nothing
+    { position = canvas.position
+    , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
+    , links = canvas.links
+    , currentlyDragging = None
     , dragState = Draggable.init
     , nodeMap = nodeMap
     }
@@ -65,50 +78,52 @@ update msg mod =
             Draggable.update dragEvent dragMsg mod
 
         OnDragStart id ->
-            ( { mod | currentlyDragging = Just id }, Cmd.none )
+            if id == "canvas" then
+                ( { mod | currentlyDragging = DCanvas }, Cmd.none )
+
+            else if Dict.member id mod.nodes then
+                ( { mod | currentlyDragging = DNode id (Dict.get id mod.nodes) }, Cmd.none )
+
+            else
+                ( { mod | currentlyDragging = DPort id }, Cmd.none )
 
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
-                Just "canvas" ->
-                    let
-                        canvas =
-                            mod.canvas
-                    in
-                    ( { mod
-                        | canvas =
-                            { canvas
-                                | position = updatePosition canvas.position deltaPos
-                            }
-                      }
-                    , Cmd.none
-                    )
+                DCanvas ->
+                    ( { mod | position = updatePosition mod.position deltaPos }, Cmd.none )
 
-                Nothing ->
+                DNode nodeId node ->
+                    let
+                        updateNode mayBeNode =
+                            case mayBeNode of
+                                Nothing ->
+                                    Nothing
+
+                                Just n ->
+                                    Just
+                                        { n
+                                            | position = updatePosition n.position deltaPos
+                                        }
+                    in
+                    ( { mod | nodes = Dict.update nodeId updateNode mod.nodes }, Cmd.none )
+
+                DPort id ->
                     ( mod, Cmd.none )
 
-                _ ->
-                    ( { mod
-                        | canvas =
-                            updateCanvasNodes mod.canvas
-                                (handleNodeAndPortUpdate deltaPos mod.currentlyDragging mod.canvas.nodes)
-                      }
-                    , Cmd.none
-                    )
+                None ->
+                    ( mod, Cmd.none )
 
         OnDragEnd ->
-            ( { mod | currentlyDragging = Nothing }, Cmd.none )
+            ( { mod | currentlyDragging = None }, Cmd.none )
 
         AddNode newNode ->
-            ( { mod | canvas = updateCanvasNodes mod.canvas (mod.canvas.nodes ++ [ newNode ]) }, Cmd.none )
+            ( { mod | nodes = Dict.insert newNode.id newNode mod.nodes }, Cmd.none )
 
         RemoveNode node ->
-            ( { mod
-                | canvas =
-                    updateCanvasNodes mod.canvas
-                        (List.filter (.id >> (/=) node.id) mod.canvas.nodes)
-              }
-            , Cmd.none
-            )
+            ( { mod | nodes = Dict.remove node.id mod.nodes }, Cmd.none )
+
+        RemoveLink link ->
+            ( mod, Cmd.none )
 
 
 view : Model -> List (Html.Attribute Msg) -> Html Msg
@@ -128,15 +143,15 @@ view mod canvasStyle =
             [ A.style "width" "0px"
             , A.style "height" "0px"
             , A.style "position" "absolute"
-            , A.style "left" (String.fromFloat mod.canvas.position.x ++ "px")
-            , A.style "top" (String.fromFloat mod.canvas.position.y ++ "px")
+            , A.style "left" (String.fromFloat mod.position.x ++ "px")
+            , A.style "top" (String.fromFloat mod.position.y ++ "px")
             ]
             (List.map
                 (\node ->
                     Node.viewNode node DragMsg (mod.nodeMap node.nodeType)
                 )
-                mod.canvas.nodes
-                ++ List.map (Link.viewLink mod.canvas.nodes) mod.canvas.links
+                (Dict.values mod.nodes)
+                ++ List.map (Link.viewLink mod.nodes) mod.links
             )
         ]
 
@@ -156,21 +171,3 @@ dragEvent =
 updatePosition : Position -> Position -> Position
 updatePosition oldPos deltaPos =
     { x = oldPos.x + deltaPos.x, y = oldPos.y + deltaPos.y }
-
-
-updateCanvasNodes : FCCanvas -> List FCNode -> FCCanvas
-updateCanvasNodes canvas nodes =
-    { canvas | nodes = nodes }
-
-
-handleNodeAndPortUpdate : Position -> Maybe String -> List FCNode -> List FCNode
-handleNodeAndPortUpdate deltaPos currentlyDragging nodes =
-    let
-        updateNode node =
-            if Just node.id == currentlyDragging then
-                { node | position = updatePosition node.position deltaPos }
-
-            else
-                node
-    in
-    List.map updateNode nodes
