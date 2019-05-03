@@ -4,6 +4,7 @@ import Browser
 import FlowChart.Types exposing (FCCanvas, FCNode, Position)
 import Html exposing (..)
 import Html.Attributes as A
+import Link
 import Node
 import Utils.CmdExtra as CmdExtra
 import Utils.Draggable as Draggable
@@ -137,6 +138,7 @@ view mod canvasStyle =
                     Node.viewNode node DragMsg (mod.nodeMap node.nodeType)
                 )
                 mod.canvas.nodes
+                ++ List.map (Link.viewLink mod.canvas.nodes) mod.canvas.links
             )
         ]
 

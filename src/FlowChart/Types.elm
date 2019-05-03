@@ -34,4 +34,5 @@ type alias FCLink =
 type alias FCCanvas =
     { nodes : List FCNode
     , position : Position
+    , links : List FCLink
     }

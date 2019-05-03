@@ -27,10 +27,15 @@ init _ =
     ( { canvasModel =
             FlowChart.init
                 { nodes =
-                    [ createNode "0" (FCTypes.Position 10 10)
-                    , createNode "1" (FCTypes.Position 100 200)
+                    [ createNode "node-0" (FCTypes.Position 10 10)
+                    , createNode "node-1" (FCTypes.Position 100 200)
                     ]
                 , position = FCTypes.Position 0 0
+                , links =
+                    [ FCTypes.FCLink "link-0"
+                        { nodeId = "node-0", portId = "port-node-0-1" }
+                        { nodeId = "node-1", portId = "port-node-1-0" }
+                    ]
                 }
                 nodeToHtml
       }
@@ -87,7 +92,7 @@ createNode id position =
     , id = id
     , nodeType = "default"
     , ports =
-        [ { id = "node-" ++ id ++ "0", position = FCTypes.Position 0.42 0.8 }
-        , { id = "node-" ++ id ++ "1", position = FCTypes.Position 0.42 0 }
+        [ { id = "port-" ++ id ++ "-0", position = FCTypes.Position 0.42 0 }
+        , { id = "port-" ++ id ++ "-1", position = FCTypes.Position 0.42 0.8 }
         ]
     }

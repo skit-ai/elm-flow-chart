@@ -28,10 +28,9 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { canvasModel =
             FlowChart.init
-                { nodes =
-                    [ createNode "0" (FCTypes.Position 100 200)
-                    ]
+                { nodes = [ createNode "0" (FCTypes.Position 100 200) ]
                 , position = FCTypes.Position 0 0
+                , links = []
                 }
                 nodeToHtml
       , noOfNodes = 1
