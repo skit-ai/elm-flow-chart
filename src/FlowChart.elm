@@ -23,7 +23,7 @@ import Utils.RandomExtra as RandomExtra
 type alias Model =
     { position : Vector2
     , nodes : Dict String FCNode
-    , links : Dict String FCLink
+    , links : Dict String Link.Model
     , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
     , nodeMap : String -> Html Msg
@@ -33,11 +33,11 @@ type alias Model =
 type Msg
     = DragMsg (Draggable.Msg DraggableTypes)
     | OnDragBy Vector2
-    | OnDragStart DraggableTypes Vector2
+    | OnDragStart DraggableTypes
     | OnDragEnd
     | AddNode FCNode
     | RemoveNode FCNode
-    | AddLink FCLink String FCPort String
+    | AddLink FCLink String
     | RemoveLink FCLink
 
 
@@ -76,16 +76,19 @@ update msg mod =
         DragMsg dragMsg ->
             Draggable.update dragEvent dragMsg mod
 
-        OnDragStart currentlyDragging startPos ->
+        OnDragStart currentlyDragging ->
             let
                 cCmd =
                     case currentlyDragging of
-                        DPort nodeId fcPort link ->
+                        DPort nodeId portId link ->
                             let
+                                p =
+                                    { nodeId = nodeId, portId = portId }
+
                                 newLink =
-                                    { id = "", from = startPos, to = startPos }
+                                    { id = "", from = p, to = p }
                             in
-                            Random.generate (AddLink newLink nodeId fcPort) (RandomExtra.randomString 6)
+                            Random.generate (AddLink newLink) (RandomExtra.randomString 6)
 
                         _ ->
                             Cmd.none
@@ -95,12 +98,12 @@ update msg mod =
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
                 DCanvas ->
-                    ( { mod | position = updateVector2 mod.position deltaPos }, Cmd.none )
+                    ( { mod | position = updatePosition mod.position deltaPos }, Cmd.none )
 
                 DNode node ->
                     let
                         updateNode fcNode =
-                            { fcNode | position = updateVector2 fcNode.position deltaPos }
+                            { fcNode | position = updatePosition fcNode.position deltaPos }
                     in
                     ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Cmd.none )
 
@@ -111,8 +114,15 @@ update msg mod =
 
                         Just k ->
                             let
-                                updateLink fcLink =
-                                    { fcLink | to = updateVector2 fcLink.to deltaPos }
+                                updateLink link =
+                                    { link
+                                        | tempPosition =
+                                            Just
+                                                (updatePosition
+                                                    (Maybe.withDefault (Vector2 0 0) link.tempPosition)
+                                                    deltaPos
+                                                )
+                                    }
                             in
                             ( { mod | links = Dict.update k.id (Maybe.map updateLink) mod.links }, Cmd.none )
 
@@ -128,15 +138,14 @@ update msg mod =
         RemoveNode node ->
             ( { mod | nodes = Dict.remove node.id mod.nodes }, Cmd.none )
 
-        AddLink fcLink nodeId fcPort linkId ->
+        AddLink fcLink linkId ->
             let
-                newLink : FCLink
                 newLink =
-                    { fcLink | id = linkId }
+                    { fcLink = { fcLink | id = linkId }, tempPosition = Nothing }
             in
             ( { mod
                 | links = Dict.insert linkId newLink mod.links
-                , currentlyDragging = DPort nodeId fcPort (Just newLink)
+                , currentlyDragging = DPort fcLink.from.nodeId fcLink.from.portId (Just newLink.fcLink)
               }
             , Cmd.none
             )
@@ -172,7 +181,7 @@ view mod canvasStyle =
                 (Dict.values mod.nodes)
                 ++ [ svg
                         [ Svg.Attributes.overflow "visible" ]
-                        (List.map Link.viewLink (Dict.values mod.links))
+                        (List.map (Link.viewLink mod.nodes) (Dict.values mod.links))
                    ]
             )
         ]
@@ -184,12 +193,12 @@ view mod canvasStyle =
 
 dragEvent : Draggable.Event Msg DraggableTypes
 dragEvent =
-    { onDragStartListener = \x -> \y -> Just (OnDragStart x y)
+    { onDragStartListener = OnDragStart >> Just
     , onDragByListener = OnDragBy >> Just
     , onDragEndListener = Just OnDragEnd
     }
 
 
-updateVector2 : Vector2 -> Vector2 -> Vector2
-updateVector2 oldPos deltaPos =
+updatePosition : Vector2 -> Vector2 -> Vector2
+updatePosition oldPos deltaPos =
     { x = oldPos.x + deltaPos.x, y = oldPos.y + deltaPos.y }

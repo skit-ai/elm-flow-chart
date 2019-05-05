@@ -21,7 +21,7 @@ type Msg id
 
 
 type alias Event msg id =
-    { onDragStartListener : id -> Vector2 -> Maybe msg
+    { onDragStartListener : id -> Maybe msg
     , onDragByListener : Vector2 -> Maybe msg
     , onDragEndListener : Maybe msg
     }
@@ -83,7 +83,7 @@ updateInternal : Event msg id -> Msg id -> DragState -> ( DragState, Maybe msg )
 updateInternal event msg dragState =
     case msg of
         DragStart id pos ->
-            ( TentativeDrag pos, event.onDragStartListener id pos )
+            ( TentativeDrag pos, event.onDragStartListener id )
 
         DragEnd pos ->
             ( NotDragging, event.onDragEndListener )

@@ -13,6 +13,7 @@ type alias Vector2 =
 type alias FCNode =
     { id : String
     , position : Vector2
+    , dim : Vector2
     , nodeType : String
     , ports : List FCPort
     }
@@ -26,12 +27,13 @@ type alias FCPort =
 
 type alias FCLink =
     { id : String
-    , from : Vector2
-    , to : Vector2
+    , from : { nodeId : String, portId : String }
+    , to : { nodeId : String, portId : String }
     }
 
 
 type alias FCCanvas =
     { nodes : List FCNode
     , position : Vector2
+    , links : List FCLink
     }

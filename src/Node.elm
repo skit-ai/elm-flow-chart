@@ -11,6 +11,8 @@ viewNode : FCNode -> (Draggable.Msg DraggableTypes -> msg) -> Html msg -> Html m
 viewNode fcNode dragListener children =
     div
         [ A.style "position" "absolute"
+        , A.style "width" (String.fromFloat fcNode.dim.x ++ "px")
+        , A.style "height" (String.fromFloat fcNode.dim.y ++ "px")
         , A.style "left" (String.fromFloat fcNode.position.x ++ "px")
         , A.style "top" (String.fromFloat fcNode.position.y ++ "px")
         , Draggable.enableDragging (DNode fcNode) dragListener
@@ -30,6 +32,6 @@ viewPort nodeId fcPort dragListener =
         , A.style "cursor" "pointer"
         , A.style "top" (String.fromFloat (fcPort.position.y * 100) ++ "%")
         , A.style "left" (String.fromFloat (fcPort.position.x * 100) ++ "%")
-        , Draggable.enableDragging (DPort nodeId fcPort Nothing) dragListener
+        , Draggable.enableDragging (DPort nodeId fcPort.id Nothing) dragListener
         ]
         []

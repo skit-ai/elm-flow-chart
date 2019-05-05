@@ -30,6 +30,7 @@ init _ =
             FlowChart.init
                 { nodes = [ createNode "0" (FCTypes.Vector2 100 200) ]
                 , position = FCTypes.Vector2 0 0
+                , links = []
                 }
                 nodeToHtml
       , noOfNodes = 1
@@ -78,10 +79,9 @@ view mod =
 nodeToHtml : String -> Html FlowChart.Msg
 nodeToHtml nodeType =
     div
-        [ A.style "width" "40px"
-        , A.style "height" "25px"
+        [ A.style "width" "100%"
+        , A.style "height" "100%"
         , A.style "background-color" "white"
-        , A.style "padding" "35px 45px"
         ]
         [ text nodeType ]
 
@@ -94,6 +94,7 @@ createNode : String -> FCTypes.Vector2 -> FCTypes.FCNode
 createNode id position =
     { position = position
     , id = id
+    , dim = FCTypes.Vector2 130 100
     , nodeType = "default"
     , ports =
         [ { id = "node-" ++ id ++ "0", position = FCTypes.Vector2 0.42 0.8 }
