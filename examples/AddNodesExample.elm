@@ -28,9 +28,8 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { canvasModel =
             FlowChart.init
-                { nodes = [ createNode "0" (FCTypes.Position 100 200) ]
-                , position = FCTypes.Position 0 0
-                , links = []
+                { nodes = [ createNode "0" (FCTypes.Vector2 100 200) ]
+                , position = FCTypes.Vector2 0 0
                 }
                 nodeToHtml
       , noOfNodes = 1
@@ -58,7 +57,7 @@ update msg model =
             let
                 cCmd =
                     FlowChart.addNode
-                        (createNode (String.fromInt model.noOfNodes) (FCTypes.Position 10 10))
+                        (createNode (String.fromInt model.noOfNodes) (FCTypes.Vector2 10 10))
             in
             ( { model | noOfNodes = model.noOfNodes + 1 }, Cmd.map CanvasMsg cCmd )
 
@@ -91,12 +90,12 @@ nodeToHtml nodeType =
 -- HELPER FUNCTIONS
 
 
-createNode : String -> FCTypes.Position -> FCTypes.FCNode
+createNode : String -> FCTypes.Vector2 -> FCTypes.FCNode
 createNode id position =
     { position = position
     , id = id
     , nodeType = "default"
     , ports =
-        [ { id = "node-" ++ id ++ "0", position = FCTypes.Position 0.42 0.8 }
+        [ { id = "node-" ++ id ++ "0", position = FCTypes.Vector2 0.42 0.8 }
         ]
     }

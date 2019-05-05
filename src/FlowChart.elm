@@ -3,7 +3,7 @@ module FlowChart exposing (Model, Msg, addNode, init, subscriptions, update, vie
 import Browser
 import Dict exposing (Dict)
 import DraggableTypes exposing (DraggableTypes(..))
-import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Position)
+import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html, div)
 import Html.Attributes as A
 import Link
@@ -21,7 +21,7 @@ import Utils.RandomExtra as RandomExtra
 
 
 type alias Model =
-    { position : Position
+    { position : Vector2
     , nodes : Dict String FCNode
     , links : Dict String FCLink
     , currentlyDragging : DraggableTypes
@@ -32,8 +32,8 @@ type alias Model =
 
 type Msg
     = DragMsg (Draggable.Msg DraggableTypes)
-    | OnDragBy Position
-    | OnDragStart DraggableTypes Position
+    | OnDragBy Vector2
+    | OnDragStart DraggableTypes Vector2
     | OnDragEnd
     | AddNode FCNode
     | RemoveNode FCNode
@@ -95,12 +95,12 @@ update msg mod =
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
                 DCanvas ->
-                    ( { mod | position = updatePosition mod.position deltaPos }, Cmd.none )
+                    ( { mod | position = updateVector2 mod.position deltaPos }, Cmd.none )
 
                 DNode node ->
                     let
                         updateNode fcNode =
-                            { fcNode | position = updatePosition fcNode.position deltaPos }
+                            { fcNode | position = updateVector2 fcNode.position deltaPos }
                     in
                     ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Cmd.none )
 
@@ -112,7 +112,7 @@ update msg mod =
                         Just k ->
                             let
                                 updateLink fcLink =
-                                    { fcLink | to = updatePosition fcLink.to deltaPos }
+                                    { fcLink | to = updateVector2 fcLink.to deltaPos }
                             in
                             ( { mod | links = Dict.update k.id (Maybe.map updateLink) mod.links }, Cmd.none )
 
@@ -190,6 +190,6 @@ dragEvent =
     }
 
 
-updatePosition : Position -> Position -> Position
-updatePosition oldPos deltaPos =
+updateVector2 : Vector2 -> Vector2 -> Vector2
+updateVector2 oldPos deltaPos =
     { x = oldPos.x + deltaPos.x, y = oldPos.y + deltaPos.y }

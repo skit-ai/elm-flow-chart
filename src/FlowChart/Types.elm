@@ -1,10 +1,10 @@
-module FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Position)
+module FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 
-{-| Position of canvas or node
+{-| Vector2 of canvas or node
 
-        pos = Position 10 10
+        pos = Vector2 10 10
 -}
-type alias Position =
+type alias Vector2 =
     { x : Float
     , y : Float
     }
@@ -12,7 +12,7 @@ type alias Position =
 
 type alias FCNode =
     { id : String
-    , position : Position
+    , position : Vector2
     , nodeType : String
     , ports : List FCPort
     }
@@ -20,18 +20,18 @@ type alias FCNode =
 
 type alias FCPort =
     { id : String
-    , position : Position
+    , position : Vector2
     }
 
 
 type alias FCLink =
     { id : String
-    , from : Position
-    , to : Position
+    , from : Vector2
+    , to : Vector2
     }
 
 
 type alias FCCanvas =
     { nodes : List FCNode
-    , position : Position
+    , position : Vector2
     }

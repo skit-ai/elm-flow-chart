@@ -1,7 +1,7 @@
 module Utils.Draggable exposing (DragState, Event, Msg, enableDragging, init, move, subscriptions, update)
 
 import Browser.Events
-import FlowChart.Types exposing (Position)
+import FlowChart.Types exposing (Vector2)
 import Html
 import Html.Events
 import Json.Decode as Decode
@@ -10,19 +10,19 @@ import Utils.CmdExtra as CmdExtra
 
 type DragState
     = NotDragging
-    | TentativeDrag Position
-    | Dragging Position
+    | TentativeDrag Vector2
+    | Dragging Vector2
 
 
 type Msg id
-    = DragStart id Position
-    | DragBy Position
-    | DragEnd Position
+    = DragStart id Vector2
+    | DragBy Vector2
+    | DragEnd Vector2
 
 
 type alias Event msg id =
-    { onDragStartListener : id -> Position -> Maybe msg
-    , onDragByListener : Position -> Maybe msg
+    { onDragStartListener : id -> Vector2 -> Maybe msg
+    , onDragByListener : Vector2 -> Maybe msg
     , onDragEndListener : Maybe msg
     }
 
@@ -65,7 +65,7 @@ update event msg model =
     ( { model | dragState = newDrag }, CmdExtra.optionalMessage newMsgMaybe )
 
 
-move : Position -> String
+move : Vector2 -> String
 move pos =
     "translate(" ++ String.fromFloat pos.x ++ "px, " ++ String.fromFloat pos.y ++ "px)"
 
@@ -100,9 +100,9 @@ updateInternal event msg dragState =
                     ( Dragging newPos, event.onDragByListener (calcDelta newPos oldPos) )
 
 
-positionDecoder : Decode.Decoder Position
+positionDecoder : Decode.Decoder Vector2
 positionDecoder =
-    Decode.map2 Position
+    Decode.map2 Vector2
         (Decode.field "pageX" Decode.float)
         (Decode.field "pageY" Decode.float)
 
@@ -112,7 +112,7 @@ baseDecoder key =
     Decode.map (DragStart key) positionDecoder
 
 
-calcDelta : Position -> Position -> Position
+calcDelta : Vector2 -> Vector2 -> Vector2
 calcDelta end start =
     { x = end.x - start.x
     , y = end.y - start.y

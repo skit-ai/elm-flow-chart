@@ -1,6 +1,6 @@
 module Link exposing (viewLink)
 
-import FlowChart.Types exposing (FCLink, Position)
+import FlowChart.Types exposing (FCLink, Vector2)
 import Html exposing (Html)
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
@@ -24,6 +24,6 @@ viewLink fcLink =
 -- HELPER FUNCTIONS
 
 
-positionToString : Position -> String
+positionToString : Vector2 -> String
 positionToString pos =
     String.fromFloat pos.x ++ "," ++ String.fromFloat pos.y
