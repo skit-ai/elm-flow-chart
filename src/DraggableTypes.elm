@@ -6,5 +6,5 @@ import FlowChart.Types exposing (..)
 type DraggableTypes
     = DCanvas
     | DNode FCNode
-    | DPort String String (Maybe FCLink)
+    | DPort String String String
     | None

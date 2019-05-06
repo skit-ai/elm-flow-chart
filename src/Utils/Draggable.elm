@@ -17,13 +17,13 @@ type DragState
 type Msg id
     = DragStart id Vector2
     | DragBy Vector2
-    | DragEnd Vector2
+    | DragEnd { position : Vector2, elementId : String, parentId : String }
 
 
 type alias Event msg id =
     { onDragStartListener : id -> Maybe msg
     , onDragByListener : Vector2 -> Maybe msg
-    , onDragEndListener : Maybe msg
+    , onDragEndListener : String -> String -> Maybe msg
     }
 
 
@@ -40,7 +40,7 @@ subscriptions envelope dragState =
 
         _ ->
             [ Browser.Events.onMouseMove (Decode.map DragBy positionDecoder)
-            , Browser.Events.onMouseUp (Decode.map DragEnd positionDecoder)
+            , Browser.Events.onMouseUp (Decode.map DragEnd dragEndDecoder)
             ]
                 |> Sub.batch
                 |> Sub.map envelope
@@ -49,7 +49,10 @@ subscriptions envelope dragState =
 enableDragging : id -> (Msg id -> msg) -> Html.Attribute msg
 enableDragging key target =
     Html.Events.custom "mousedown"
-        (Decode.map (alwaysPreventDefaultAndStopPropagation << target) (baseDecoder key))
+        (Decode.map
+            (alwaysPreventDefaultAndStopPropagation << target)
+            (Decode.map (DragStart key) positionDecoder)
+        )
 
 
 update :
@@ -85,8 +88,8 @@ updateInternal event msg dragState =
         DragStart id pos ->
             ( TentativeDrag pos, event.onDragStartListener id )
 
-        DragEnd pos ->
-            ( NotDragging, event.onDragEndListener )
+        DragEnd { position, elementId, parentId } ->
+            ( NotDragging, event.onDragEndListener elementId parentId )
 
         DragBy newPos ->
             case dragState of
@@ -107,9 +110,12 @@ positionDecoder =
         (Decode.field "pageY" Decode.float)
 
 
-baseDecoder : id -> Decode.Decoder (Msg id)
-baseDecoder key =
-    Decode.map (DragStart key) positionDecoder
+dragEndDecoder : Decode.Decoder { position : Vector2, elementId : String, parentId : String }
+dragEndDecoder =
+    Decode.map3 (\p -> \id -> \pId -> { position = p, elementId = id, parentId = pId })
+        positionDecoder
+        (Decode.at [ "target", "id" ] Decode.string)
+        (Decode.at [ "target", "parentNode", "id" ] Decode.string)
 
 
 calcDelta : Vector2 -> Vector2 -> Vector2

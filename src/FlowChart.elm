@@ -34,7 +34,7 @@ type Msg
     = DragMsg (Draggable.Msg DraggableTypes)
     | OnDragBy Vector2
     | OnDragStart DraggableTypes
-    | OnDragEnd
+    | OnDragEnd String String
     | AddNode FCNode
     | RemoveNode FCNode
     | AddLink FCLink String
@@ -80,7 +80,7 @@ update msg mod =
             let
                 cCmd =
                     case currentlyDragging of
-                        DPort nodeId portId link ->
+                        DPort nodeId portId linkId ->
                             let
                                 p =
                                     { nodeId = nodeId, portId = portId }
@@ -107,30 +107,50 @@ update msg mod =
                     in
                     ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Cmd.none )
 
-                DPort nodeId fcPort maybeLink ->
-                    case maybeLink of
-                        Nothing ->
-                            ( mod, Cmd.none )
-
-                        Just k ->
-                            let
-                                updateLink link =
-                                    { link
-                                        | tempPosition =
-                                            Just
-                                                (updatePosition
-                                                    (Maybe.withDefault (Vector2 0 0) link.tempPosition)
-                                                    deltaPos
-                                                )
-                                    }
-                            in
-                            ( { mod | links = Dict.update k.id (Maybe.map updateLink) mod.links }, Cmd.none )
+                DPort nodeId portId linkId ->
+                    let
+                        updateLink link =
+                            { link
+                                | tempPosition =
+                                    Just
+                                        (updatePosition
+                                            (Maybe.withDefault (Vector2 0 0) link.tempPosition)
+                                            deltaPos
+                                        )
+                            }
+                    in
+                    ( { mod | links = Dict.update linkId (Maybe.map updateLink) mod.links }, Cmd.none )
 
                 None ->
                     ( mod, Cmd.none )
 
-        OnDragEnd ->
-            ( { mod | currentlyDragging = None }, Cmd.none )
+        OnDragEnd elementId parentId ->
+            case mod.currentlyDragging of
+                DPort nodeId portId linkId ->
+                    if Dict.member parentId mod.nodes then
+                        let
+                            updateFcLink fcLink =
+                                { fcLink | to = { nodeId = parentId, portId = elementId } }
+
+                            updateLink link =
+                                { link | tempPosition = Nothing, fcLink = updateFcLink link.fcLink }
+                        in
+                        ( { mod
+                            | currentlyDragging = None
+                            , links = Dict.update linkId (Maybe.map updateLink) mod.links
+                        }
+                        , Cmd.none
+                        )
+                    else
+                        ( { mod
+                            | currentlyDragging = None
+                            , links = Dict.remove linkId mod.links
+                        }
+                        , Cmd.none
+                        )
+
+                _ ->
+                    ( { mod | currentlyDragging = None }, Cmd.none )
 
         AddNode newNode ->
             ( { mod | nodes = Dict.insert newNode.id newNode mod.nodes }, Cmd.none )
@@ -145,7 +165,7 @@ update msg mod =
             in
             ( { mod
                 | links = Dict.insert linkId newLink mod.links
-                , currentlyDragging = DPort fcLink.from.nodeId fcLink.from.portId (Just newLink.fcLink)
+                , currentlyDragging = DPort fcLink.from.nodeId fcLink.from.portId linkId
               }
             , Cmd.none
             )
@@ -195,7 +215,7 @@ dragEvent : Draggable.Event Msg DraggableTypes
 dragEvent =
     { onDragStartListener = OnDragStart >> Just
     , onDragByListener = OnDragBy >> Just
-    , onDragEndListener = Just OnDragEnd
+    , onDragEndListener = \x -> \y -> Just (OnDragEnd x y)
     }
 
 
