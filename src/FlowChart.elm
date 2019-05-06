@@ -1,9 +1,25 @@
-module FlowChart exposing (Model, Msg, addNode, init, subscriptions, update, view)
+module FlowChart exposing
+    ( Model, Msg
+    , init, subscriptions, update, view
+    , addNode
+    )
 
 {-| This library aims to provide a flow chart builder in Elm.
 
+
 # Definition
-@docs FlowChart
+
+@docs Model, Msg
+
+
+# Helpers
+
+@docs init, subscriptions, update, view
+
+
+# Functionalities
+
+@docs addNode
 
 -}
 
@@ -28,6 +44,8 @@ import Utils.RandomExtra as RandomExtra
 -- MODEL
 
 
+{-| flowchart model
+-}
 type alias Model =
     { position : Vector2
     , nodes : Dict String FCNode
@@ -38,6 +56,8 @@ type alias Model =
     }
 
 
+{-| flowchart message
+-}
 type Msg
     = DragMsg (Draggable.Msg DraggableTypes)
     | OnDragBy Vector2
@@ -49,6 +69,11 @@ type Msg
     | RemoveLink FCLink
 
 
+{-| init flowchart
+
+    init fcCanvas nodeMap
+
+-}
 init : FCCanvas -> (String -> Html Msg) -> Model
 init canvas nodeMap =
     { position = canvas.position
@@ -60,24 +85,22 @@ init canvas nodeMap =
     }
 
 
+{-| call to add node to canvas
+-}
 addNode : FCNode -> Cmd Msg
 addNode newNode =
     CmdExtra.message (AddNode newNode)
 
 
-
--- SUB
-
-
+{-| subscriptions
+-}
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Draggable.subscriptions DragMsg model.dragState
 
 
-
--- UPDATE
-
-
+{-| call to update the canvas
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg mod =
     case msg of
@@ -183,6 +206,8 @@ update msg mod =
             ( { mod | links = Dict.remove fcLink.id mod.links }, Cmd.none )
 
 
+{-| display the canvas
+-}
 view : Model -> List (Html.Attribute Msg) -> Html Msg
 view mod canvasStyle =
     div

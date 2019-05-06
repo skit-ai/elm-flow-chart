@@ -1,8 +1,19 @@
-module FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
+module FlowChart.Types exposing (Vector2, FCNode, FCPort, FCLink, FCCanvas)
 
-{-| Vector2 of canvas or node
+{-|
+
+
+# Defination
+
+@docs Vector2, FCNode, FCPort, FCLink, FCCanvas
+
+-}
+
+
+{-| Vector2 which can represent position or dimension of node, canvas, etc.
 
         pos = Vector2 10 10
+
 -}
 type alias Vector2 =
     { x : Float
@@ -10,6 +21,8 @@ type alias Vector2 =
     }
 
 
+{-| Represent the data of a single node in flowchart
+-}
 type alias FCNode =
     { id : String
     , position : Vector2
@@ -19,12 +32,21 @@ type alias FCNode =
     }
 
 
+{-| Nodes are connected through links at Port position
+-}
 type alias FCPort =
     { id : String
     , position : Vector2
     }
 
 
+{-| Link data to connect nodes through ports
+
+id -> Id of the link, should be unique
+from -> NodeId, portId of the start of link
+to -> NodeId, portId of the end of link
+
+-}
 type alias FCLink =
     { id : String
     , from : { nodeId : String, portId : String }
@@ -32,6 +54,8 @@ type alias FCLink =
     }
 
 
+{-| Canvas data to initialize the flowchart
+-}
 type alias FCCanvas =
     { nodes : List FCNode
     , position : Vector2
