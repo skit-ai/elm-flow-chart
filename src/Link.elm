@@ -22,8 +22,9 @@ viewLink nodes link =
             Svg.path
                 [ SA.d (generatePath startPos endPos)
                 , SA.stroke "cornflowerblue"
-                , SA.strokeWidth "3"
+                , SA.strokeWidth "2"
                 , SA.fill "none"
+                , SA.markerEnd "url(#arrow)"
                 ]
                 []
 
@@ -57,7 +58,7 @@ getPortPosition : String -> Maybe FCNode -> Maybe Vector2
 getPortPosition portId node =
     let
         addRelativePosition pos1 pos2 dim =
-            { x = pos1.x + pos2.x * dim.x + 10, y = pos1.y + pos2.y * dim.y + 10 }
+            { x = pos1.x + pos2.x * dim.x, y = pos1.y + pos2.y * dim.y + 10 }
 
         toPos : FCPort -> FCNode -> Vector2
         toPos fcPort fcNode =
@@ -84,18 +85,8 @@ generatePath startPos endPos =
         width =
             abs (startPos.x - endPos.x)
 
-        height =
-            abs (startPos.y - endPos.y)
-
-        isHorizontal =
-            width > height
-
         curve =
-            if isHorizontal then
-                Vector2 (width / 3) 0
-
-            else
-                Vector2 0 (height / 3)
+            Vector2 (width * 1.5) 0
     in
     "M"
         ++ positionToString startPos

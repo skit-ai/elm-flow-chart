@@ -10,11 +10,12 @@ import Link
 import Node
 import Random
 import Svg exposing (Svg, svg)
-import Svg.Attributes
+import Svg.Attributes as SA
 import Utils.CmdExtra as CmdExtra
 import Utils.Draggable as Draggable
-import Utils.RandomExtra as RandomExtra
 import Utils.MathUtils as MathUtils
+import Utils.RandomExtra as RandomExtra
+
 
 
 -- MODEL
@@ -138,14 +139,15 @@ update msg mod =
                         ( { mod
                             | currentlyDragging = None
                             , links = Dict.update linkId (Maybe.map updateLink) mod.links
-                        }
+                          }
                         , Cmd.none
                         )
+
                     else
                         ( { mod
                             | currentlyDragging = None
                             , links = Dict.remove linkId mod.links
-                        }
+                          }
                         , Cmd.none
                         )
 
@@ -200,8 +202,22 @@ view mod canvasStyle =
                 )
                 (Dict.values mod.nodes)
                 ++ [ svg
-                        [ Svg.Attributes.overflow "visible" ]
-                        (List.map (Link.viewLink mod.nodes) (Dict.values mod.links))
+                        [ SA.overflow "visible" ]
+                        ([ Svg.defs []
+                            [ Svg.marker
+                                [ SA.id "arrow"
+                                , SA.orient "auto"
+                                , SA.refX "4"
+                                , SA.refY "4"
+                                , SA.markerWidth "8"
+                                , SA.markerHeight "8"
+                                ]
+                                [ Svg.path [ SA.d "M0,0 V8 L5,4 Z", SA.fill "cornflowerblue" ] []
+                                ]
+                            ]
+                         ]
+                            ++ List.map (Link.viewLink mod.nodes) (Dict.values mod.links)
+                        )
                    ]
             )
         ]
