@@ -88,7 +88,7 @@ createNode id position =
     , dim = FCTypes.Vector2 130 100
     , nodeType = "default"
     , ports =
-        [ { id = "port-" ++ id ++ "-0", position = FCTypes.Vector2 0.42 0 }
-        , { id = "port-" ++ id ++ "-1", position = FCTypes.Vector2 0.42 0.8 }
+        [ { id = "port-" ++ id ++ "-0", position = FCTypes.Vector2 0 0.42 }
+        , { id = "port-" ++ id ++ "-1", position = FCTypes.Vector2 0.85 0.42 }
         ]
     }

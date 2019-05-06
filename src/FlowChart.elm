@@ -14,7 +14,7 @@ import Svg.Attributes
 import Utils.CmdExtra as CmdExtra
 import Utils.Draggable as Draggable
 import Utils.RandomExtra as RandomExtra
-
+import Utils.MathUtils as MathUtils
 
 
 -- MODEL
@@ -98,12 +98,12 @@ update msg mod =
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
                 DCanvas ->
-                    ( { mod | position = updatePosition mod.position deltaPos }, Cmd.none )
+                    ( { mod | position = MathUtils.addVector2 mod.position deltaPos }, Cmd.none )
 
                 DNode node ->
                     let
                         updateNode fcNode =
-                            { fcNode | position = updatePosition fcNode.position deltaPos }
+                            { fcNode | position = MathUtils.addVector2 fcNode.position deltaPos }
                     in
                     ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Cmd.none )
 
@@ -113,7 +113,7 @@ update msg mod =
                             { link
                                 | tempPosition =
                                     Just
-                                        (updatePosition
+                                        (MathUtils.addVector2
                                             (Maybe.withDefault (Vector2 0 0) link.tempPosition)
                                             deltaPos
                                         )
@@ -217,8 +217,3 @@ dragEvent =
     , onDragByListener = OnDragBy >> Just
     , onDragEndListener = \x -> \y -> Just (OnDragEnd x y)
     }
-
-
-updatePosition : Vector2 -> Vector2 -> Vector2
-updatePosition oldPos deltaPos =
-    { x = oldPos.x + deltaPos.x, y = oldPos.y + deltaPos.y }

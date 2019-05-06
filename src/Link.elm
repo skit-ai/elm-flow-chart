@@ -5,6 +5,7 @@ import FlowChart.Types exposing (FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html)
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
+import Utils.MathUtils as MathUtils
 
 
 type alias Model =
@@ -18,14 +19,11 @@ viewLink nodes link =
             Svg.line [] []
 
         Just ( startPos, endPos ) ->
-            let
-                p =
-                    positionToString startPos ++ " " ++ positionToString endPos
-            in
-            Svg.polyline
-                [ SA.points p
+            Svg.path
+                [ SA.d (generatePath startPos endPos)
                 , SA.stroke "cornflowerblue"
                 , SA.strokeWidth "3"
+                , SA.fill "none"
                 ]
                 []
 
@@ -72,11 +70,38 @@ getPortPosition portId node =
     Maybe.map2 toPos (Maybe.andThen getPort node) node
 
 
-positionToString : Vector2 -> String
-positionToString pos =
-    String.fromFloat pos.x ++ "," ++ String.fromFloat pos.y
-
-
 updatePosition : Vector2 -> Vector2 -> Vector2
 updatePosition oldPos deltaPos =
     { x = oldPos.x + deltaPos.x, y = oldPos.y + deltaPos.y }
+
+
+generatePath : Vector2 -> Vector2 -> String
+generatePath startPos endPos =
+    let
+        positionToString pos =
+            String.fromFloat pos.x ++ "," ++ String.fromFloat pos.y
+
+        width =
+            abs (startPos.x - endPos.x)
+
+        height =
+            abs (startPos.y - endPos.y)
+
+        isHorizontal =
+            width > height
+
+        curve =
+            if isHorizontal then
+                Vector2 (width / 3) 0
+
+            else
+                Vector2 0 (height / 3)
+    in
+    "M"
+        ++ positionToString startPos
+        ++ " C "
+        ++ positionToString (MathUtils.addVector2 startPos curve)
+        ++ " "
+        ++ positionToString (MathUtils.subVector2 endPos curve)
+        ++ " "
+        ++ positionToString endPos

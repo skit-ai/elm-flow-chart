@@ -6,6 +6,7 @@ import Html
 import Html.Events
 import Json.Decode as Decode
 import Utils.CmdExtra as CmdExtra
+import Utils.MathUtils as MathUtils
 
 
 type DragState
@@ -97,10 +98,10 @@ updateInternal event msg dragState =
                     ( dragState, Nothing )
 
                 TentativeDrag oldPos ->
-                    ( Dragging newPos, event.onDragByListener (calcDelta newPos oldPos) )
+                    ( Dragging newPos, event.onDragByListener (MathUtils.subVector2 newPos oldPos) )
 
                 Dragging oldPos ->
-                    ( Dragging newPos, event.onDragByListener (calcDelta newPos oldPos) )
+                    ( Dragging newPos, event.onDragByListener (MathUtils.subVector2 newPos oldPos) )
 
 
 positionDecoder : Decode.Decoder Vector2
@@ -116,10 +117,3 @@ dragEndDecoder =
         positionDecoder
         (Decode.at [ "target", "id" ] Decode.string)
         (Decode.at [ "target", "parentNode", "id" ] Decode.string)
-
-
-calcDelta : Vector2 -> Vector2 -> Vector2
-calcDelta end start =
-    { x = end.x - start.x
-    , y = end.y - start.y
-    }
