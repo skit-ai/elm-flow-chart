@@ -1,5 +1,12 @@
 module FlowChart exposing (Model, Msg, addNode, init, subscriptions, update, view)
 
+{-| This library aims to provide a flow chart builder in Elm.
+
+# Definition
+@docs FlowChart
+
+-}
+
 import Browser
 import Dict exposing (Dict)
 import DraggableTypes exposing (DraggableTypes(..))
