@@ -1,6 +1,6 @@
 module Node exposing (viewNode)
 
-import Internal exposing (DraggableTypes(..))
+import Internal exposing (DraggableTypes(..), toPx)
 import FlowChart.Types exposing (FCNode, FCPort, Vector2)
 import Html exposing (Html, button, div, text)
 import Html.Attributes as A
@@ -12,10 +12,10 @@ viewNode fcNode dragListener children =
     div
         [ A.id fcNode.id
         , A.style "position" "absolute"
-        , A.style "width" (String.fromFloat fcNode.dim.x ++ "px")
-        , A.style "height" (String.fromFloat fcNode.dim.y ++ "px")
-        , A.style "left" (String.fromFloat fcNode.position.x ++ "px")
-        , A.style "top" (String.fromFloat fcNode.position.y ++ "px")
+        , A.style "width" (toPx fcNode.dim.x)
+        , A.style "height" (toPx fcNode.dim.y)
+        , A.style "left" (toPx fcNode.position.x)
+        , A.style "top" (toPx fcNode.position.y)
         , Draggable.enableDragging (DNode fcNode) dragListener
         ]
         ([ children ]

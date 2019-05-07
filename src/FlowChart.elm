@@ -25,7 +25,7 @@ module FlowChart exposing
 
 import Browser
 import Dict exposing (Dict)
-import Internal exposing (DraggableTypes(..))
+import Internal exposing (DraggableTypes(..), toPx)
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html, div)
 import Html.Attributes as A
@@ -232,8 +232,8 @@ view mod canvasStyle =
             [ A.style "width" "0px"
             , A.style "height" "0px"
             , A.style "position" "absolute"
-            , A.style "left" (String.fromFloat mod.position.x ++ "px")
-            , A.style "top" (String.fromFloat mod.position.y ++ "px")
+            , A.style "left" (toPx mod.position.x)
+            , A.style "top" (toPx mod.position.y)
             ]
             (List.map
                 (\node ->
@@ -242,19 +242,7 @@ view mod canvasStyle =
                 (Dict.values mod.nodes)
                 ++ [ svg
                         [ SA.overflow "visible" ]
-                        ([ Svg.defs []
-                            [ Svg.marker
-                                [ SA.id "arrow"
-                                , SA.orient "auto"
-                                , SA.refX "4"
-                                , SA.refY "4"
-                                , SA.markerWidth "8"
-                                , SA.markerHeight "8"
-                                ]
-                                [ Svg.path [ SA.d "M0,0 V8 L5,4 Z", SA.fill "cornflowerblue" ] []
-                                ]
-                            ]
-                         ]
+                        ( Internal.getArrowHead
                             ++ List.map (Link.viewLink mod.nodes) (Dict.values mod.links)
                         )
                    ]
