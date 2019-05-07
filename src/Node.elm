@@ -1,6 +1,6 @@
 module Node exposing (viewNode)
 
-import DraggableTypes exposing (DraggableTypes(..))
+import Internal exposing (DraggableTypes(..))
 import FlowChart.Types exposing (FCNode, FCPort, Vector2)
 import Html exposing (Html, button, div, text)
 import Html.Attributes as A

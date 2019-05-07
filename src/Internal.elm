@@ -1,4 +1,4 @@
-module DraggableTypes exposing (DraggableTypes(..))
+module Internal exposing (DraggableTypes(..))
 
 import FlowChart.Types exposing (..)
 

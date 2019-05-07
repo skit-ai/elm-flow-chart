@@ -82,17 +82,17 @@ generatePath startPos endPos =
         positionToString pos =
             String.fromFloat pos.x ++ "," ++ String.fromFloat pos.y
 
-        width =
-            abs (startPos.x - endPos.x)
+        offsetX =
+            max 100 (abs (startPos.x - endPos.x) * 1.5)
 
-        curve =
-            Vector2 (width * 1.5) 0
+        offset =
+            Vector2 offsetX 0
     in
     "M"
         ++ positionToString startPos
         ++ " C "
-        ++ positionToString (MathUtils.addVector2 startPos curve)
+        ++ positionToString (MathUtils.addVector2 startPos offset)
         ++ " "
-        ++ positionToString (MathUtils.subVector2 endPos curve)
+        ++ positionToString (MathUtils.subVector2 endPos offset)
         ++ " "
         ++ positionToString endPos

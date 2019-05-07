@@ -1,5 +1,5 @@
 module FlowChart exposing
-    ( Model, Msg
+    ( Model, Msg, FCEvent
     , init, subscriptions, update, view
     , addNode
     )
@@ -25,7 +25,7 @@ module FlowChart exposing
 
 import Browser
 import Dict exposing (Dict)
-import DraggableTypes exposing (DraggableTypes(..))
+import Internal exposing (DraggableTypes(..))
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html, div)
 import Html.Attributes as A
@@ -67,6 +67,13 @@ type Msg
     | RemoveNode FCNode
     | AddLink FCLink String
     | RemoveLink FCLink
+
+
+type alias FCEvent msg =
+    { onCanvasClick : FCCanvas -> Maybe msg
+    , onNodeClick : FCNode -> Maybe msg
+    , onLinkClick : FCLink -> Maybe msg
+    }
 
 
 {-| init flowchart
