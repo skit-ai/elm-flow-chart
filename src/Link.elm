@@ -83,7 +83,7 @@ generatePath startPos endPos =
             String.fromFloat pos.x ++ "," ++ String.fromFloat pos.y
 
         offsetX =
-            max 100 (abs (startPos.x - endPos.x) * 1.5)
+            min (max 100 (abs (startPos.x - endPos.x) * 1.5)) 350
 
         offset =
             Vector2 offsetX 0

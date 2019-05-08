@@ -14,7 +14,7 @@ main =
 
 
 type alias Model =
-    { canvasModel : FlowChart.Model
+    { canvasModel : FlowChart.Model Msg
     }
 
 
@@ -33,7 +33,7 @@ init _ =
                 , position = FCTypes.Vector2 0 0
                 , links = []
                 }
-                nodeToHtml
+                CanvasMsg
       }
     , Cmd.none
     )
@@ -41,7 +41,12 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.map CanvasMsg (FlowChart.subscriptions model.canvasModel)
+    FlowChart.subscriptions model.canvasModel
+
+
+flowChartEvent : FlowChart.FCEventConfig Msg
+flowChartEvent =
+    FlowChart.initEventConfig []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -50,20 +55,18 @@ update msg model =
         CanvasMsg cMsg ->
             let
                 ( canvasModel, canvasCmd ) =
-                    FlowChart.update cMsg model.canvasModel
+                    FlowChart.update flowChartEvent cMsg model.canvasModel
             in
-            ( { model | canvasModel = canvasModel }, Cmd.map CanvasMsg canvasCmd )
+            ( { model | canvasModel = canvasModel }, canvasCmd )
 
 
 view : Model -> Html Msg
 view mod =
     div []
-        [ Html.map CanvasMsg
-            (FlowChart.view mod.canvasModel
-                [ A.style "height" "600px"
-                , A.style "width" "85%"
-                ]
-            )
+        [ FlowChart.view mod.canvasModel nodeToHtml
+            [ A.style "height" "600px"
+            , A.style "width" "85%"
+            ]
         ]
 
 
@@ -73,6 +76,8 @@ nodeToHtml nodeType =
         [ A.style "width" "100%"
         , A.style "height" "100%"
         , A.style "background-color" "white"
+        , A.style "border-radius" "4px"
+        , A.style "box-sizing" "border-box"
         ]
         [ text nodeType ]
 

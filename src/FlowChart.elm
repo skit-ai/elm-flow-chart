@@ -52,13 +52,13 @@ import Utils.RandomExtra as RandomExtra
 
 {-| flowchart model
 -}
-type alias Model =
+type alias Model msg =
     { position : Vector2
     , nodes : Dict String FCNode
     , links : Dict String Link.Model
     , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
-    , nodeMap : String -> Html Msg
+    , targetMsg : Msg -> msg
     }
 
 
@@ -86,36 +86,41 @@ type alias FCEventConfig msg =
     init fcCanvas nodeMap
 
 -}
-init : FCCanvas -> (String -> Html Msg) -> Model
-init canvas nodeMap =
+init : FCCanvas -> (Msg -> msg) -> Model msg
+init canvas target =
     { position = canvas.position
     , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
     , links = Dict.empty
     , currentlyDragging = None
     , dragState = Draggable.init
-    , nodeMap = nodeMap
+    , targetMsg = target
     }
 
 
 initEventConfig : List (FCEventConfig msg) -> FCEventConfig msg
 initEventConfig events =
+    -- FCEventConfig <| List.foldl (<|) Internal.defaultEventConfig events
     Internal.defaultEventConfig
 
 
 {-| subscriptions
 -}
-subscriptions : Model -> Sub Msg
+subscriptions : Model msg -> Sub msg
 subscriptions model =
-    Draggable.subscriptions DragMsg model.dragState
+    Sub.map model.targetMsg (Draggable.subscriptions DragMsg model.dragState)
 
 
 {-| call to update the canvas
 -}
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg mod =
+update : FCEventConfig msg -> Msg -> Model msg -> ( Model msg, Cmd msg )
+update event msg mod =
     case msg of
         DragMsg dragMsg ->
-            Draggable.update dragEvent dragMsg mod
+            let
+                ( updatedMod, cmdMsg ) =
+                    Draggable.update dragEvent dragMsg mod
+            in
+            ( updatedMod, Cmd.map mod.targetMsg cmdMsg )
 
         OnDragStart currentlyDragging ->
             let
@@ -134,19 +139,88 @@ update msg mod =
                         _ ->
                             Cmd.none
             in
-            ( { mod | currentlyDragging = currentlyDragging }, cCmd )
+            ( { mod | currentlyDragging = currentlyDragging }, Cmd.map mod.targetMsg cCmd )
 
+        _ ->
+            let
+                ( updatedModel, maybeMsg ) =
+                    updateInternal event msg mod
+            in
+            ( updatedModel, CmdExtra.optionalMessage maybeMsg )
+
+
+{-| display the canvas
+-}
+view : Model msg -> (String -> Html Msg) -> List (Html.Attribute Msg) -> Html msg
+view mod nodeMap canvasStyle =
+    Html.map mod.targetMsg
+        (div
+            ([ A.style "width" "700px"
+             , A.style "height" "580px"
+             , A.style "overflow" "hidden"
+             , A.style "position" "fixed"
+             , A.style "cursor" "move"
+             , A.style "background-color" "lightgrey"
+             , Draggable.enableDragging DCanvas DragMsg
+             ]
+                ++ canvasStyle
+            )
+            [ div
+                [ A.style "width" "0px"
+                , A.style "height" "0px"
+                , A.style "position" "absolute"
+                , A.style "left" (toPx mod.position.x)
+                , A.style "top" (toPx mod.position.y)
+                ]
+                (List.map
+                    (\node ->
+                        Node.viewNode node DragMsg (nodeMap node.nodeType)
+                    )
+                    (Dict.values mod.nodes)
+                    ++ [ svg
+                            [ SA.overflow "visible" ]
+                            (Internal.getArrowHead
+                                ++ List.map (Link.viewLink mod.nodes) (Dict.values mod.links)
+                            )
+                       ]
+                )
+            ]
+        )
+
+
+{-| call to add node to canvas
+-}
+addNode : (Msg -> msg) -> FCNode -> Cmd msg
+addNode target newNode =
+    Cmd.map target (CmdExtra.message (AddNode newNode))
+
+
+
+-- HELPER FUNCTIONS
+
+
+dragEvent : Draggable.Event Msg DraggableTypes
+dragEvent =
+    { onDragStartListener = OnDragStart >> Just
+    , onDragByListener = OnDragBy >> Just
+    , onDragEndListener = \x -> \y -> Just (OnDragEnd x y)
+    }
+
+
+updateInternal : FCEventConfig msg -> Msg -> Model msg -> ( Model msg, Maybe msg )
+updateInternal event msg mod =
+    case msg of
         OnDragBy deltaPos ->
             case mod.currentlyDragging of
                 DCanvas ->
-                    ( { mod | position = MathUtils.addVector2 mod.position deltaPos }, Cmd.none )
+                    ( { mod | position = MathUtils.addVector2 mod.position deltaPos }, Nothing )
 
                 DNode node ->
                     let
                         updateNode fcNode =
                             { fcNode | position = MathUtils.addVector2 fcNode.position deltaPos }
                     in
-                    ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Cmd.none )
+                    ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Nothing )
 
                 DPort nodeId portId linkId ->
                     let
@@ -160,10 +234,10 @@ update msg mod =
                                         )
                             }
                     in
-                    ( { mod | links = Dict.update linkId (Maybe.map updateLink) mod.links }, Cmd.none )
+                    ( { mod | links = Dict.update linkId (Maybe.map updateLink) mod.links }, Nothing )
 
                 None ->
-                    ( mod, Cmd.none )
+                    ( mod, Nothing )
 
         OnDragEnd elementId parentId ->
             case mod.currentlyDragging of
@@ -180,7 +254,7 @@ update msg mod =
                             | currentlyDragging = None
                             , links = Dict.update linkId (Maybe.map updateLink) mod.links
                           }
-                        , Cmd.none
+                        , Nothing
                         )
 
                     else
@@ -188,17 +262,17 @@ update msg mod =
                             | currentlyDragging = None
                             , links = Dict.remove linkId mod.links
                           }
-                        , Cmd.none
+                        , Nothing
                         )
 
                 _ ->
-                    ( { mod | currentlyDragging = None }, Cmd.none )
+                    ( { mod | currentlyDragging = None }, Nothing )
 
         AddNode newNode ->
-            ( { mod | nodes = Dict.insert newNode.id newNode mod.nodes }, Cmd.none )
+            ( { mod | nodes = Dict.insert newNode.id newNode mod.nodes }, Nothing )
 
         RemoveNode nodeId ->
-            ( { mod | nodes = Dict.remove nodeId mod.nodes }, Cmd.none )
+            ( { mod | nodes = Dict.remove nodeId mod.nodes }, Nothing )
 
         AddLink fcLink linkId ->
             let
@@ -209,64 +283,11 @@ update msg mod =
                 | links = Dict.insert linkId newLink mod.links
                 , currentlyDragging = DPort fcLink.from.nodeId fcLink.from.portId linkId
               }
-            , Cmd.none
+            , Nothing
             )
 
         RemoveLink linkId ->
-            ( { mod | links = Dict.remove linkId mod.links }, Cmd.none )
+            ( { mod | links = Dict.remove linkId mod.links }, Nothing )
 
-
-{-| display the canvas
--}
-view : Model -> List (Html.Attribute Msg) -> Html Msg
-view mod canvasStyle =
-    div
-        ([ A.style "width" "700px"
-         , A.style "height" "580px"
-         , A.style "overflow" "hidden"
-         , A.style "position" "fixed"
-         , A.style "cursor" "move"
-         , A.style "background-color" "lightgrey"
-         , Draggable.enableDragging DCanvas DragMsg
-         ]
-            ++ canvasStyle
-        )
-        [ div
-            [ A.style "width" "0px"
-            , A.style "height" "0px"
-            , A.style "position" "absolute"
-            , A.style "left" (toPx mod.position.x)
-            , A.style "top" (toPx mod.position.y)
-            ]
-            (List.map
-                (\node ->
-                    Node.viewNode node DragMsg (mod.nodeMap node.nodeType)
-                )
-                (Dict.values mod.nodes)
-                ++ [ svg
-                        [ SA.overflow "visible" ]
-                        (Internal.getArrowHead
-                            ++ List.map (Link.viewLink mod.nodes) (Dict.values mod.links)
-                        )
-                   ]
-            )
-        ]
-
-
-{-| call to add node to canvas
--}
-addNode : FCNode -> Cmd Msg
-addNode newNode =
-    CmdExtra.message (AddNode newNode)
-
-
-
--- HELPER FUNCTIONS
-
-
-dragEvent : Draggable.Event Msg DraggableTypes
-dragEvent =
-    { onDragStartListener = OnDragStart >> Just
-    , onDragByListener = OnDragBy >> Just
-    , onDragEndListener = \x -> \y -> Just (OnDragEnd x y)
-    }
+        _ ->
+            ( mod, Nothing )
