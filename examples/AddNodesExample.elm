@@ -61,11 +61,12 @@ update msg model =
 
         AddNode ->
             let
-                cCmd =
-                    FlowChart.addNode CanvasMsg
+                updatedModel =
+                    FlowChart.addNode
                         (createNode (String.fromInt model.noOfNodes) (FCTypes.Vector2 10 10))
+                        model.canvasModel
             in
-            ( { model | noOfNodes = model.noOfNodes + 1 }, cCmd )
+            ( { model | noOfNodes = model.noOfNodes + 1, canvasModel = updatedModel }, Cmd.none )
 
 
 view : Model -> Html Msg

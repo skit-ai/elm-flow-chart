@@ -69,8 +69,6 @@ type Msg
     | OnDragBy Vector2
     | OnDragStart DraggableTypes
     | OnDragEnd String String
-    | AddNode FCNode
-    | RemoveNode String
     | AddLink FCLink String
     | RemoveLink String
 
@@ -190,9 +188,14 @@ view mod nodeMap canvasStyle =
 
 {-| call to add node to canvas
 -}
-addNode : (Msg -> msg) -> FCNode -> Cmd msg
-addNode target newNode =
-    Cmd.map target (CmdExtra.message (AddNode newNode))
+addNode : FCNode -> Model msg -> Model msg
+addNode newNode model =
+    { model | nodes = Dict.insert newNode.id newNode model.nodes }
+
+
+removeNode : String -> Model msg -> Model msg
+removeNode nodeId model =
+    { model | nodes = Dict.remove nodeId model.nodes }
 
 
 
@@ -267,12 +270,6 @@ updateInternal event msg mod =
 
                 _ ->
                     ( { mod | currentlyDragging = None }, Nothing )
-
-        AddNode newNode ->
-            ( { mod | nodes = Dict.insert newNode.id newNode mod.nodes }, Nothing )
-
-        RemoveNode nodeId ->
-            ( { mod | nodes = Dict.remove nodeId mod.nodes }, Nothing )
 
         AddLink fcLink linkId ->
             let

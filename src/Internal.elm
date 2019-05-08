@@ -13,7 +13,7 @@ type DraggableTypes
 
 
 type alias FCEventConfig msg =
-    { onCanvasClick : FCCanvas -> Maybe msg
+    { onCanvasClick : Maybe msg
     , onNodeClick : FCNode -> Maybe msg
     , onLinkClick : FCLink -> Maybe msg
     }
@@ -21,7 +21,7 @@ type alias FCEventConfig msg =
 
 defaultEventConfig : FCEventConfig msg
 defaultEventConfig =
-    { onCanvasClick = \_ -> Nothing
+    { onCanvasClick = Nothing
     , onNodeClick = \_ -> Nothing
     , onLinkClick = \_ -> Nothing
     }
