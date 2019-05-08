@@ -1,14 +1,30 @@
-module Internal exposing (DraggableTypes(..), getArrowHead, toPx)
+module Internal exposing (DraggableTypes(..), FCEventConfig, defaultEventConfig, getArrowHead, toPx)
 
 import FlowChart.Types exposing (..)
 import Svg exposing (Svg)
 import Svg.Attributes as SA
+
 
 type DraggableTypes
     = DCanvas
     | DNode FCNode
     | DPort String String String
     | None
+
+
+type alias FCEventConfig msg =
+    { onCanvasClick : FCCanvas -> Maybe msg
+    , onNodeClick : FCNode -> Maybe msg
+    , onLinkClick : FCLink -> Maybe msg
+    }
+
+
+defaultEventConfig : FCEventConfig msg
+defaultEventConfig =
+    { onCanvasClick = \_ -> Nothing
+    , onNodeClick = \_ -> Nothing
+    , onLinkClick = \_ -> Nothing
+    }
 
 
 getArrowHead : List (Svg msg)

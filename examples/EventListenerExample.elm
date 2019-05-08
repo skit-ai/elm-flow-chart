@@ -22,6 +22,11 @@ type Msg
     = CanvasMsg FlowChart.Msg
 
 
+flowChartEvent : FlowChart.FCEventConfig Msg
+flowChartEvent =
+    FlowChart.initEventConfig []
+
+
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { canvasModel =

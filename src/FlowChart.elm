@@ -1,6 +1,7 @@
 module FlowChart exposing
-    ( Model, Msg, FCEvent
-    , init, subscriptions, update, view
+    ( Model, Msg, FCEventConfig
+    , init, initEventConfig, subscriptions
+    , update, view
     , addNode
     )
 
@@ -9,12 +10,17 @@ module FlowChart exposing
 
 # Definition
 
-@docs Model, Msg
+@docs Model, Msg, FCEventConfig
 
 
-# Helpers
+# Subscriptions
 
-@docs init, subscriptions, update, view
+@docs init, initEventConfig, subscriptions
+
+
+# Update
+
+@docs update, view
 
 
 # Functionalities
@@ -25,10 +31,10 @@ module FlowChart exposing
 
 import Browser
 import Dict exposing (Dict)
-import Internal exposing (DraggableTypes(..), toPx)
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html, div)
 import Html.Attributes as A
+import Internal exposing (DraggableTypes(..), toPx)
 import Link
 import Node
 import Random
@@ -64,16 +70,15 @@ type Msg
     | OnDragStart DraggableTypes
     | OnDragEnd String String
     | AddNode FCNode
-    | RemoveNode FCNode
+    | RemoveNode String
     | AddLink FCLink String
-    | RemoveLink FCLink
+    | RemoveLink String
 
 
-type alias FCEvent msg =
-    { onCanvasClick : FCCanvas -> Maybe msg
-    , onNodeClick : FCNode -> Maybe msg
-    , onLinkClick : FCLink -> Maybe msg
-    }
+{-| Config for subscribing to events
+-}
+type alias FCEventConfig msg =
+    Internal.FCEventConfig msg
 
 
 {-| init flowchart
@@ -92,11 +97,9 @@ init canvas nodeMap =
     }
 
 
-{-| call to add node to canvas
--}
-addNode : FCNode -> Cmd Msg
-addNode newNode =
-    CmdExtra.message (AddNode newNode)
+initEventConfig : List (FCEventConfig msg) -> FCEventConfig msg
+initEventConfig events =
+    Internal.defaultEventConfig
 
 
 {-| subscriptions
@@ -194,8 +197,8 @@ update msg mod =
         AddNode newNode ->
             ( { mod | nodes = Dict.insert newNode.id newNode mod.nodes }, Cmd.none )
 
-        RemoveNode node ->
-            ( { mod | nodes = Dict.remove node.id mod.nodes }, Cmd.none )
+        RemoveNode nodeId ->
+            ( { mod | nodes = Dict.remove nodeId mod.nodes }, Cmd.none )
 
         AddLink fcLink linkId ->
             let
@@ -209,8 +212,8 @@ update msg mod =
             , Cmd.none
             )
 
-        RemoveLink fcLink ->
-            ( { mod | links = Dict.remove fcLink.id mod.links }, Cmd.none )
+        RemoveLink linkId ->
+            ( { mod | links = Dict.remove linkId mod.links }, Cmd.none )
 
 
 {-| display the canvas
@@ -242,12 +245,19 @@ view mod canvasStyle =
                 (Dict.values mod.nodes)
                 ++ [ svg
                         [ SA.overflow "visible" ]
-                        ( Internal.getArrowHead
+                        (Internal.getArrowHead
                             ++ List.map (Link.viewLink mod.nodes) (Dict.values mod.links)
                         )
                    ]
             )
         ]
+
+
+{-| call to add node to canvas
+-}
+addNode : FCNode -> Cmd Msg
+addNode newNode =
+    CmdExtra.message (AddNode newNode)
 
 
 
