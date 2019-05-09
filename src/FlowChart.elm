@@ -1,5 +1,5 @@
 module FlowChart exposing
-    ( Model, Msg, FCEventConfig
+    ( Model, Msg, FCEventConfig, FCEvent
     , init, initEventConfig, subscriptions
     , update, view
     , addNode
@@ -69,14 +69,26 @@ type Msg
     | OnDragBy Vector2
     | OnDragStart DraggableTypes
     | OnDragEnd String String
+    | OnClick
     | AddLink FCLink String
     | RemoveLink String
 
 
 {-| Config for subscribing to events
+
+        onCanvasClick -> when canvas is clicked
+        onNodeClick FCNode -> when any node is clicked
+        onLinkClick FCLink -> when any link is clicked
+
 -}
 type alias FCEventConfig msg =
     Internal.FCEventConfig msg
+
+
+{-| Event declaration for event config
+-}
+type alias FCEvent msg =
+    FCEventConfig msg -> FCEventConfig msg
 
 
 {-| init flowchart
@@ -95,10 +107,9 @@ init canvas target =
     }
 
 
-initEventConfig : List (FCEventConfig msg) -> FCEventConfig msg
+initEventConfig : List (FCEvent msg) -> FCEventConfig msg
 initEventConfig events =
-    -- FCEventConfig <| List.foldl (<|) Internal.defaultEventConfig events
-    Internal.defaultEventConfig
+    List.foldl (<|) Internal.defaultEventConfig events
 
 
 {-| subscriptions
@@ -207,6 +218,7 @@ dragEvent =
     { onDragStartListener = OnDragStart >> Just
     , onDragByListener = OnDragBy >> Just
     , onDragEndListener = \x -> \y -> Just (OnDragEnd x y)
+    , onClickListener = Just OnClick
     }
 
 
@@ -270,6 +282,20 @@ updateInternal event msg mod =
 
                 _ ->
                     ( { mod | currentlyDragging = None }, Nothing )
+
+        OnClick ->
+            case mod.currentlyDragging of
+                DCanvas ->
+                    ( { mod | currentlyDragging = None }, event.onCanvasClick )
+
+                DNode node ->
+                    ( { mod | currentlyDragging = None }, event.onNodeClick node )
+
+                DPort nodeId portId linkId ->
+                    ( { mod | links = Dict.remove linkId mod.links }, Nothing )
+
+                None ->
+                    ( mod, Nothing )
 
         AddLink fcLink linkId ->
             let

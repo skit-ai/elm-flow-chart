@@ -2,6 +2,7 @@ module EventListenerExample exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import FlowChart
+import FlowChart.Events as FCEvents
 import FlowChart.Types as FCTypes
 import Html exposing (..)
 import Html.Attributes as A
@@ -20,11 +21,18 @@ type alias Model =
 
 type Msg
     = CanvasMsg FlowChart.Msg
+    | CanvasClick
+    | NodeClick FCTypes.FCNode
+    | LinkClick FCTypes.FCLink
 
 
 flowChartEvent : FlowChart.FCEventConfig Msg
 flowChartEvent =
-    FlowChart.initEventConfig []
+    FlowChart.initEventConfig
+        [ FCEvents.onCanvasClick CanvasClick
+        , FCEvents.onNodeClick NodeClick
+        , FCEvents.onLinkClick LinkClick
+        ]
 
 
 init : () -> ( Model, Cmd Msg )
@@ -58,6 +66,15 @@ update msg model =
                     FlowChart.update flowChartEvent cMsg model.canvasModel
             in
             ( { model | canvasModel = canvasModel }, canvasCmd )
+
+        CanvasClick ->
+            ( model, Cmd.none )
+
+        NodeClick fcNode ->
+            ( model, Cmd.none )
+
+        LinkClick fcLink ->
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
