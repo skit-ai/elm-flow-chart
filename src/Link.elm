@@ -3,8 +3,10 @@ module Link exposing (Model, viewLink)
 import Dict exposing (Dict)
 import FlowChart.Types exposing (FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html)
+import Json.Decode as Decode
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
+import Svg.Events as SvgEvents
 import Utils.MathUtils as MathUtils
 
 
@@ -12,21 +14,33 @@ type alias Model =
     { fcLink : FCLink, tempPosition : Maybe Vector2 }
 
 
-viewLink : Dict String FCNode -> Model -> Svg msg
-viewLink nodes link =
+viewLink : Dict String FCNode -> msg -> Model -> Svg msg
+viewLink nodes targetMsg link =
     case calcPositions link nodes of
         Nothing ->
             Svg.line [] []
 
         Just ( startPos, endPos ) ->
-            Svg.path
-                [ SA.d (generatePath startPos endPos)
-                , SA.stroke "cornflowerblue"
-                , SA.strokeWidth "2"
-                , SA.fill "none"
-                , SA.markerEnd "url(#arrow)"
+            let
+                pathString =
+                    generatePath startPos endPos
+            in
+            Svg.g [ SA.fill "none", SA.stroke "cornflowerblue" ]
+                [ Svg.path
+                    [ SA.d pathString
+                    , SA.strokeWidth "2"
+                    , SA.markerEnd "url(#arrow)"
+                    ]
+                    []
+                , Svg.path
+                    [ SA.d pathString
+                    , SA.strokeWidth "20"
+                    , SA.opacity "0.3"
+                    , SvgEvents.custom "click"
+                        (Decode.map preventPropagation (Decode.succeed targetMsg))
+                    ]
+                    []
                 ]
-                []
 
 
 
@@ -96,3 +110,8 @@ generatePath startPos endPos =
         ++ positionToString (MathUtils.subVector2 endPos offset)
         ++ " "
         ++ positionToString endPos
+
+
+preventPropagation : msg -> { message : msg, stopPropagation : Bool, preventDefault : Bool }
+preventPropagation msg =
+    { message = msg, stopPropagation = True, preventDefault = True }

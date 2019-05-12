@@ -1,6 +1,6 @@
 module FlowChart exposing
-    ( Model, Msg, FCEventConfig, FCEvent
-    , init, initEventConfig, subscriptions
+    ( Model, Msg, FCEvent
+    , init, initEventConfig, subscriptions, FCEventConfig
     , update, view
     , addNode
     )
@@ -10,12 +10,12 @@ module FlowChart exposing
 
 # Definition
 
-@docs Model, Msg, FCEventConfig
+@docs Model, Msg, FCEvent
 
 
 # Subscriptions
 
-@docs init, initEventConfig, subscriptions
+@docs init, initEventConfig, subscriptions, FCEventConfig
 
 
 # Update
@@ -72,6 +72,7 @@ type Msg
     | OnClick
     | AddLink FCLink String
     | RemoveLink String
+    | LinkClick FCLink
 
 
 {-| Config for subscribing to events
@@ -189,7 +190,8 @@ view mod nodeMap canvasStyle =
                     ++ [ svg
                             [ SA.overflow "visible" ]
                             (Internal.getArrowHead
-                                ++ List.map (Link.viewLink mod.nodes) (Dict.values mod.links)
+                                ++ List.map (\l -> Link.viewLink mod.nodes (LinkClick l.fcLink) l)
+                                    (Dict.values mod.links)
                             )
                        ]
                 )
@@ -311,6 +313,9 @@ updateInternal event msg mod =
 
         RemoveLink linkId ->
             ( { mod | links = Dict.remove linkId mod.links }, Nothing )
+
+        LinkClick fcLink ->
+            ( mod, event.onLinkClick fcLink )
 
         _ ->
             ( mod, Nothing )

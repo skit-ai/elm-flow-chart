@@ -52,7 +52,7 @@ enableDragging : id -> (Msg id -> msg) -> Html.Attribute msg
 enableDragging key target =
     Html.Events.custom "mousedown"
         (Decode.map
-            (alwaysPreventDefaultAndStopPropagation << target)
+            (preventDefaultAndStopPropagation << target)
             (Decode.map (DragStart key) positionDecoder)
         )
 
@@ -79,8 +79,8 @@ move pos =
 -- HELPER FUNCS
 
 
-alwaysPreventDefaultAndStopPropagation : msg -> { message : msg, stopPropagation : Bool, preventDefault : Bool }
-alwaysPreventDefaultAndStopPropagation msg =
+preventDefaultAndStopPropagation : msg -> { message : msg, stopPropagation : Bool, preventDefault : Bool }
+preventDefaultAndStopPropagation msg =
     { message = msg, stopPropagation = True, preventDefault = True }
 
 

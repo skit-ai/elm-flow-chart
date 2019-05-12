@@ -68,12 +68,21 @@ update msg model =
             ( { model | canvasModel = canvasModel }, canvasCmd )
 
         CanvasClick ->
+            let
+                _ = Debug.log "canvas" "click"
+            in
             ( model, Cmd.none )
 
         NodeClick fcNode ->
+            let
+                _ = Debug.log "node" fcNode.id
+            in
             ( model, Cmd.none )
 
         LinkClick fcLink ->
+            let
+                _ = Debug.log "key" fcLink
+            in
             ( model, Cmd.none )
 
 
