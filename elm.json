@@ -2,7 +2,7 @@
     "type": "package",
     "name": "vernacular-ai/elm-flow-chart",
     "summary": "create flexible flow charts in elm",
-    "license": "GPL-2.0",
+    "license": "MIT",
     "version": "1.0.0",
     "exposed-modules": [
         "FlowChart",
