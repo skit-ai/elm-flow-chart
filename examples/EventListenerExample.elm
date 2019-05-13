@@ -45,6 +45,8 @@ init _ =
                     ]
                 , position = FCTypes.Vector2 0 0
                 , links = []
+                , portConfig = FlowChart.defaultPortConfig
+                , linkConfig = FlowChart.defaultLinkConfig
                 }
                 CanvasMsg
       }

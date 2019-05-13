@@ -34,6 +34,8 @@ init _ =
                     ]
                 , position = FCTypes.Vector2 0 0
                 , links = []
+                , portConfig = { portSize = FCTypes.Vector2 20 20, portColor = "#72776e" }
+                , linkConfig = { linkSize = 3, linkColor = "blue" }
                 }
                 CanvasMsg
       }
@@ -65,7 +67,8 @@ update msg model =
 view : Model -> Html Msg
 view mod =
     div []
-        [ FlowChart.view mod.canvasModel nodeToHtml
+        [ FlowChart.view mod.canvasModel
+            nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"
             ]
@@ -79,21 +82,22 @@ nodeToHtml nodeType =
             div
                 [ A.style "width" "100%"
                 , A.style "height" "100%"
-                , A.style "background-color" "#fece4f"
+                , A.style "background-color" "#d5974d"
                 , A.style "border-radius" "4px"
                 , A.style "box-sizing" "border-box"
                 ]
                 [ text nodeType ]
-        
+
         "green" ->
             div
                 [ A.style "width" "100%"
                 , A.style "height" "100%"
-                , A.style "background-color" "#a0d475"
+                , A.style "background-color" "#62a22d"
                 , A.style "border-radius" "4px"
                 , A.style "box-sizing" "border-box"
                 ]
                 [ text nodeType ]
+
         _ ->
             div
                 [ A.style "width" "100%"

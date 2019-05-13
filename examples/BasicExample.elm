@@ -32,6 +32,8 @@ init _ =
                     ]
                 , position = FCTypes.Vector2 0 0
                 , links = []
+                , portConfig = FlowChart.defaultPortConfig
+                , linkConfig = FlowChart.defaultLinkConfig
                 }
                 CanvasMsg
       }
@@ -63,7 +65,8 @@ update msg model =
 view : Model -> Html Msg
 view mod =
     div []
-        [ FlowChart.view mod.canvasModel nodeToHtml
+        [ FlowChart.view mod.canvasModel
+            nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"
             ]

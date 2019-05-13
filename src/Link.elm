@@ -14,8 +14,13 @@ type alias Model =
     { fcLink : FCLink, tempPosition : Maybe Vector2 }
 
 
-viewLink : Dict String FCNode -> (String -> msg) -> Model -> Svg msg
-viewLink nodes targetMsg link =
+viewLink :
+    Dict String FCNode
+    -> (FCLink -> String -> msg)
+    -> Model
+    -> { linkSize : Int, linkColor : String }
+    -> Svg msg
+viewLink nodes targetMsg link linkConfig =
     case calcPositions link nodes of
         Nothing ->
             Svg.line [] []
@@ -25,10 +30,10 @@ viewLink nodes targetMsg link =
                 pathString =
                     generatePath startPos endPos
             in
-            Svg.g [ SA.fill "none", SA.stroke "cornflowerblue" ]
+            Svg.g [ SA.fill "none", SA.stroke linkConfig.linkColor ]
                 [ Svg.path
                     [ SA.d pathString
-                    , SA.strokeWidth "2"
+                    , SA.strokeWidth (String.fromInt linkConfig.linkSize)
                     , SA.markerEnd "url(#arrow)"
                     ]
                     []
@@ -36,9 +41,11 @@ viewLink nodes targetMsg link =
                     [ SA.d pathString
                     , SA.strokeWidth "20"
                     , SA.opacity "0"
-                    , SvgEvents.onClick (targetMsg "click")
+                    , SvgEvents.onClick (targetMsg link.fcLink "click")
                     , SvgEvents.custom "mousedown"
-                        (Decode.map preventPropagation (Decode.succeed (targetMsg "mousedown")))
+                        (Decode.map preventPropagation
+                            (Decode.succeed (targetMsg link.fcLink "mousedown"))
+                        )
                     ]
                     []
                 ]

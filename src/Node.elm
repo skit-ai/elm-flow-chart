@@ -1,14 +1,19 @@
 module Node exposing (viewNode)
 
-import Internal exposing (DraggableTypes(..), toPx)
 import FlowChart.Types exposing (FCNode, FCPort, Vector2)
 import Html exposing (Html, button, div, text)
 import Html.Attributes as A
+import Internal exposing (DraggableTypes(..), toPx)
 import Utils.Draggable as Draggable
 
 
-viewNode : FCNode -> (Draggable.Msg DraggableTypes -> msg) -> Html msg -> Html msg
-viewNode fcNode dragListener children =
+viewNode :
+    FCNode
+    -> (Draggable.Msg DraggableTypes -> msg)
+    -> { portSize : Vector2, portColor : String }
+    -> Html msg
+    -> Html msg
+viewNode fcNode dragListener portConfig children =
     div
         [ A.id fcNode.id
         , A.style "position" "absolute"
@@ -19,17 +24,22 @@ viewNode fcNode dragListener children =
         , Draggable.enableDragging (DNode fcNode) dragListener
         ]
         ([ children ]
-            ++ List.map (\p-> viewPort fcNode.id p dragListener) fcNode.ports
+            ++ List.map (\p -> viewPort fcNode.id p dragListener portConfig) fcNode.ports
         )
 
 
-viewPort : String -> FCPort -> (Draggable.Msg DraggableTypes -> msg) -> Html msg
-viewPort nodeId fcPort dragListener =
+viewPort :
+    String
+    -> FCPort
+    -> (Draggable.Msg DraggableTypes -> msg)
+    -> { portSize : Vector2, portColor : String }
+    -> Html msg
+viewPort nodeId fcPort dragListener portConfig =
     div
         [ A.id fcPort.id
-        , A.style "background" "grey"
-        , A.style "width" "20px"
-        , A.style "height" "20px"
+        , A.style "background" portConfig.portColor
+        , A.style "width" (toPx portConfig.portSize.x)
+        , A.style "height" (toPx portConfig.portSize.y)
         , A.style "position" "absolute"
         , A.style "cursor" "pointer"
         , A.style "top" (String.fromFloat (fcPort.position.y * 100) ++ "%")

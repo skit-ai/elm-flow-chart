@@ -27,8 +27,8 @@ defaultEventConfig =
     }
 
 
-getArrowHead : List (Svg msg)
-getArrowHead =
+getArrowHead : String -> List (Svg msg)
+getArrowHead linkColor =
     [ Svg.defs []
         [ Svg.marker
             [ SA.id "arrow"
@@ -38,7 +38,7 @@ getArrowHead =
             , SA.markerWidth "8"
             , SA.markerHeight "8"
             ]
-            [ Svg.path [ SA.d "M0,0 V8 L5,4 Z", SA.fill "cornflowerblue" ] []
+            [ Svg.path [ SA.d "M0,0 V8 L5,4 Z", SA.fill linkColor ] []
             ]
         ]
     ]

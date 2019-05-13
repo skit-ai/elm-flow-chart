@@ -1,6 +1,6 @@
 module FlowChart exposing
-    ( Model, Msg, FCEvent
-    , init, initEventConfig, subscriptions, FCEventConfig
+    ( Model, Msg, FCEvent, FCEventConfig
+    , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
     , addNode
     )
@@ -10,12 +10,12 @@ module FlowChart exposing
 
 # Definition
 
-@docs Model, Msg, FCEvent
+@docs Model, Msg, FCEvent, FCEventConfig
 
 
 # Subscriptions
 
-@docs init, initEventConfig, subscriptions, FCEventConfig
+@docs init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
 
 
 # Update
@@ -59,6 +59,8 @@ type alias Model msg =
     , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
     , targetMsg : Msg -> msg
+    , portConfig : { portSize : Vector2, portColor : String }
+    , linkConfig : { linkSize : Int, linkColor : String }
     }
 
 
@@ -102,10 +104,34 @@ init canvas target =
     { position = canvas.position
     , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
     , links = Dict.empty
+    , portConfig = canvas.portConfig
+    , linkConfig = canvas.linkConfig
     , currentlyDragging = None
     , dragState = Draggable.init
     , targetMsg = target
     }
+
+
+{-| init port config
+
+    portSize = Size of port in Vector2
+    portColor = Color of port
+
+-}
+defaultPortConfig : { portSize : Vector2, portColor : String }
+defaultPortConfig =
+    { portSize = { x = 20, y = 20 }, portColor = "grey" }
+
+
+{-| init link config
+
+    linkSize = stroke width of link
+    linkColor = Color of link
+
+-}
+defaultLinkConfig : { linkSize : Int, linkColor : String }
+defaultLinkConfig =
+    { linkSize = 2, linkColor = "#6495ED" }
 
 
 initEventConfig : List (FCEvent msg) -> FCEventConfig msg
@@ -184,13 +210,13 @@ view mod nodeMap canvasStyle =
                 ]
                 (List.map
                     (\node ->
-                        Node.viewNode node DragMsg (nodeMap node.nodeType)
+                        Node.viewNode node DragMsg mod.portConfig (nodeMap node.nodeType)
                     )
                     (Dict.values mod.nodes)
                     ++ [ svg
                             [ SA.overflow "visible" ]
-                            (Internal.getArrowHead
-                                ++ List.map (\l -> Link.viewLink mod.nodes (LinkClick l.fcLink) l)
+                            (Internal.getArrowHead mod.linkConfig.linkColor
+                                ++ List.map (\l -> Link.viewLink mod.nodes LinkClick l mod.linkConfig)
                                     (Dict.values mod.links)
                             )
                        ]

@@ -60,4 +60,6 @@ type alias FCCanvas =
     { nodes : List FCNode
     , position : Vector2
     , links : List FCLink
+    , portConfig : { portSize : Vector2, portColor : String }
+    , linkConfig : { linkSize : Int, linkColor : String }
     }

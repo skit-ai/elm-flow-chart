@@ -36,6 +36,8 @@ init _ =
                 { nodes = [ createNode "0" (FCTypes.Vector2 100 200) ]
                 , position = FCTypes.Vector2 0 0
                 , links = []
+                , portConfig = FlowChart.defaultPortConfig
+                , linkConfig = FlowChart.defaultLinkConfig
                 }
                 CanvasMsg
       , noOfNodes = 1
