@@ -2,7 +2,7 @@ module FlowChart exposing
     ( Model, Msg, FCEvent, FCEventConfig
     , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
-    , addNode
+    , addNode, removeNode, removeLink
     )
 
 {-| This library aims to provide a flow chart builder in Elm.
@@ -25,7 +25,7 @@ module FlowChart exposing
 
 # Functionalities
 
-@docs addNode
+@docs addNode, removeNode, removeLink
 
 -}
 
@@ -135,8 +135,8 @@ defaultLinkConfig =
 
 
 {-| pass list of events to subscribe to.
-    Currently supported are :
-        onCanvasClick, onNodeClick, onLinkClick
+Currently supported are :
+onCanvasClick, onNodeClick, onLinkClick
 -}
 initEventConfig : List (FCEvent msg) -> FCEventConfig msg
 initEventConfig events =
@@ -229,16 +229,31 @@ view mod nodeMap canvasStyle =
         )
 
 
-{-| call to add node to canvas
+{-| add node to canvas
 -}
 addNode : FCNode -> Model msg -> Model msg
 addNode newNode model =
     { model | nodes = Dict.insert newNode.id newNode model.nodes }
 
 
+{-| remove node from canvas
+
+        removeNode "node-id" FlowChartModel
+
+-}
 removeNode : String -> Model msg -> Model msg
 removeNode nodeId model =
     { model | nodes = Dict.remove nodeId model.nodes }
+
+
+{-| remove link from canvas
+
+        removeLink "link-id" FlowChartModel
+
+-}
+removeLink : String -> Model msg -> Model msg
+removeLink linkId model =
+    { model | links = Dict.remove linkId model.links }
 
 
 
@@ -340,9 +355,6 @@ updateInternal event msg mod =
               }
             , Nothing
             )
-
-        RemoveLink linkId ->
-            ( { mod | links = Dict.remove linkId mod.links }, Nothing )
 
         LinkClick fcLink eventName ->
             if eventName == "click" then
