@@ -112,10 +112,10 @@ init canvas target =
     }
 
 
-{-| init port config
+{-| get default port config
 
-    portSize = Size of port in Vector2
-    portColor = Color of port
+    portSize = Size of port in Vector2 (20, 20)
+    portColor = Color of port (grey)
 
 -}
 defaultPortConfig : { portSize : Vector2, portColor : String }
@@ -123,10 +123,10 @@ defaultPortConfig =
     { portSize = { x = 20, y = 20 }, portColor = "grey" }
 
 
-{-| init link config
+{-| get default link config
 
-    linkSize = stroke width of link
-    linkColor = Color of link
+    linkSize = stroke width of link (2px)
+    linkColor = Color of link (#6495ED)
 
 -}
 defaultLinkConfig : { linkSize : Int, linkColor : String }
@@ -134,6 +134,10 @@ defaultLinkConfig =
     { linkSize = 2, linkColor = "#6495ED" }
 
 
+{-| pass list of events to subscribe to.
+    Currently supported are :
+        onCanvasClick, onNodeClick, onLinkClick
+-}
 initEventConfig : List (FCEvent msg) -> FCEventConfig msg
 initEventConfig events =
     List.foldl (<|) Internal.defaultEventConfig events
