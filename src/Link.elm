@@ -14,7 +14,7 @@ type alias Model =
     { fcLink : FCLink, tempPosition : Maybe Vector2 }
 
 
-viewLink : Dict String FCNode -> msg -> Model -> Svg msg
+viewLink : Dict String FCNode -> (String -> msg) -> Model -> Svg msg
 viewLink nodes targetMsg link =
     case calcPositions link nodes of
         Nothing ->
@@ -35,9 +35,10 @@ viewLink nodes targetMsg link =
                 , Svg.path
                     [ SA.d pathString
                     , SA.strokeWidth "20"
-                    , SA.opacity "0.3"
-                    , SvgEvents.custom "click"
-                        (Decode.map preventPropagation (Decode.succeed targetMsg))
+                    , SA.opacity "0"
+                    , SvgEvents.onClick (targetMsg "click")
+                    , SvgEvents.custom "mousedown"
+                        (Decode.map preventPropagation (Decode.succeed (targetMsg "mousedown")))
                     ]
                     []
                 ]

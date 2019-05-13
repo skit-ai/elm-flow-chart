@@ -72,7 +72,7 @@ type Msg
     | OnClick
     | AddLink FCLink String
     | RemoveLink String
-    | LinkClick FCLink
+    | LinkClick FCLink String
 
 
 {-| Config for subscribing to events
@@ -314,8 +314,12 @@ updateInternal event msg mod =
         RemoveLink linkId ->
             ( { mod | links = Dict.remove linkId mod.links }, Nothing )
 
-        LinkClick fcLink ->
-            ( mod, event.onLinkClick fcLink )
+        LinkClick fcLink eventName ->
+            if eventName == "click" then
+                ( mod, event.onLinkClick fcLink )
+
+            else
+                ( mod, Nothing )
 
         _ ->
             ( mod, Nothing )
