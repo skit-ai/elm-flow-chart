@@ -20,8 +20,7 @@ import FlowChart.Types as FCTypes
 **2. Define Model**
 ```elm
 type alias Model =
-    { canvasModel : FlowChart.Model
-    }
+    { canvasModel : FlowChart.Model }
 ```
 
 **3. Some Initialization**
@@ -44,13 +43,27 @@ init _ =
                     ]
                 , position = FCTypes.Vector2 0 0
                 , links = []
+                , portConfig = FlowChart.defaultPortConfig
+                , linkConfig = FlowChart.defaultLinkConfig
                 }
                 nodeToHtml
       }
     , Cmd.none
     )
+
+{-| Defines how a node should look. Map a string node type to html.
+-}
+nodeToHtml : String -> Html FlowChart.Msg
+nodeToHtml nodeType =
+    div
+        [ A.style "width" "100%"
+        , A.style "height" "100%"
+        , A.style "background-color" "white"
+        , A.style "box-sizing" "border-box"
+        ]
+        [ text nodeType ]
 ```
-FlowChart `init` takes nodes, position and links for initial state. See [FCTypes](https://github.com/Vernacular-ai/elm-flow-chart/blob/master/src/FlowChart/Types.elm) to understand types used in the library.
+FlowChart `init` takes nodes, position, links and some configs for initial state. See [FCTypes](https://github.com/Vernacular-ai/elm-flow-chart/blob/master/src/FlowChart/Types.elm) to understand types used in the library.
 
 **4. Update**
 ```elm
@@ -60,9 +73,9 @@ update msg model =
         CanvasMsg cMsg ->
             let
                 ( canvasModel, canvasCmd ) =
-                    FlowChart.update cMsg model.canvasModel
+                    FlowChart.update flowChartEvent cMsg model.canvasModel
             in
-            ( { model | canvasModel = canvasModel }, Cmd.map CanvasMsg canvasCmd )
+            ( { model | canvasModel = canvasModel }, canvasCmd )
 ```
 
 **5. View**
@@ -70,12 +83,11 @@ update msg model =
 view : Model -> Html Msg
 view mod =
     div []
-        [ Html.map CanvasMsg
-            (FlowChart.view mod.canvasModel
-                [ A.style "height" "600px"
-                , A.style "width" "85%"
-                ]
-            )
+        [ FlowChart.view mod.canvasModel
+            nodeToHtml
+            [ A.style "height" "600px"
+            , A.style "width" "85%"
+            ]
         ]
 ```
 
