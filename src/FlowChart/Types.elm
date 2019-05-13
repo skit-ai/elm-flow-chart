@@ -21,7 +21,30 @@ type alias Vector2 =
     }
 
 
+{-| Nodes are connected through links via Ports. Use a value between [0, 1] for port position
+
+        port = FCPort "port-1" Vector2 0 0.42
+
+-}
+type alias FCPort =
+    { id : String
+    , position : Vector2
+    }
+
+
 {-| Represent the data of a single node in flowchart
+
+    id = unique identifier for node
+    position = position of node wrt to position of canvas
+    dim = width and height of node
+    nodeType = string identifier used to render html from node map
+    port = List of ports
+
+        node = FCNode "node-1" (Vector2 20 20) (Vector2 100 100) "default" [
+            FCPort "port-1" Vector2 0 0.42
+            ,FCPort "port-2" Vector2 0.85 0.42
+        ]
+
 -}
 type alias FCNode =
     { id : String
@@ -32,19 +55,11 @@ type alias FCNode =
     }
 
 
-{-| Nodes are connected through links at Port position
--}
-type alias FCPort =
-    { id : String
-    , position : Vector2
-    }
-
-
 {-| Link data to connect nodes through ports
 
-id -> Id of the link, should be unique
-from -> NodeId, portId of the start of link
-to -> NodeId, portId of the end of link
+    id = Id of the link, should be unique
+    from = NodeId, portId of the start of link
+    to = NodeId, portId of the end of link
 
 -}
 type alias FCLink =
