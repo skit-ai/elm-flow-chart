@@ -1,4 +1,4 @@
-module Link exposing (Model, viewLink)
+module Link exposing (Model, initModel, viewLink)
 
 import Dict exposing (Dict)
 import FlowChart.Types exposing (FCLink, FCNode, FCPort, Vector2)
@@ -12,6 +12,11 @@ import Utils.MathUtils as MathUtils
 
 type alias Model =
     { fcLink : FCLink, tempPosition : Maybe Vector2 }
+
+
+initModel : FCLink -> Model
+initModel fcLink =
+    { fcLink = fcLink, tempPosition = Nothing }
 
 
 viewLink :

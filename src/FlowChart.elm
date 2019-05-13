@@ -108,7 +108,7 @@ init : FCCanvas -> (Msg -> msg) -> Model msg
 init canvas target =
     { position = canvas.position
     , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
-    , links = Dict.empty
+    , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) canvas.links)
     , portConfig = canvas.portConfig
     , linkConfig = canvas.linkConfig
     , currentlyDragging = None
@@ -386,11 +386,18 @@ updateInternal event msg mod =
                 ( mod, Nothing )
 
         StateFileLoaded fileData ->
-            let
-                _ =
-                    Debug.log "file" fileData
-            in
-            ( mod, Nothing )
+            case SaveState.toObject fileData of
+                Nothing ->
+                    ( mod, Nothing )
+
+                Just data ->
+                    ( { mod
+                        | position = data.position
+                        , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) data.nodes)
+                        , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) data.links)
+                      }
+                    , Nothing
+                    )
 
         _ ->
             ( mod, Nothing )

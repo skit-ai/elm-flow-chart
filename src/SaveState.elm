@@ -1,4 +1,4 @@
-module SaveState exposing (toFile, toObject, selectFile)
+module SaveState exposing (selectFile, toFile, toObject)
 
 import File exposing (File)
 import File.Download
@@ -27,6 +27,20 @@ selectFile msg =
     File.Select.file [ "application/json" ] msg
 
 
-toObject : Bool
-toObject =
-    True
+type alias FCState =
+    { position : Vector2
+    , nodes : List FCNode
+    , links : List FCLink
+    }
+
+
+toObject : String -> Maybe FCState
+toObject jsonString =
+    let
+        flowChartDecoder =
+            Decode.map3 FCState
+                (Decode.field "position" FJ.vector2Decoder)
+                (Decode.field "fcNodes" (Decode.list FJ.fcNodeDecoder))
+                (Decode.field "fcLinks" (Decode.list FJ.fcLinkDecoder))
+    in
+    Result.toMaybe (Decode.decodeString flowChartDecoder jsonString)
