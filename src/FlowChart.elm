@@ -3,6 +3,7 @@ module FlowChart exposing
     , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
     , addNode, removeNode, removeLink
+    , saveFlowChart
     )
 
 {-| This library aims to provide a flow chart builder in Elm.
@@ -38,6 +39,7 @@ import Internal exposing (DraggableTypes(..), toPx)
 import Link
 import Node
 import Random
+import SaveState
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
 import Utils.CmdExtra as CmdExtra
@@ -254,6 +256,15 @@ removeNode nodeId model =
 removeLink : String -> Model msg -> Model msg
 removeLink linkId model =
     { model | links = Dict.remove linkId model.links }
+
+
+saveFlowChart : String -> Model msg -> Cmd msg
+saveFlowChart filePath model =
+    let
+        links =
+            List.map (\l -> l.fcLink) (Dict.values model.links)
+    in
+    SaveState.toFile filePath model.position (Dict.values model.nodes) links
 
 
 
