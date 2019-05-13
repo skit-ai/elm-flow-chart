@@ -23,6 +23,7 @@ type Msg
     = CanvasMsg FlowChart.Msg
     | AddNode
     | SaveFlowChart
+    | LoadFlowChart
 
 
 flowChartEvent : FlowChart.FCEventConfig Msg
@@ -74,12 +75,16 @@ update msg model =
         SaveFlowChart ->
             ( model, FlowChart.saveFlowChart "state.json" model.canvasModel )
 
+        LoadFlowChart ->
+            ( model, FlowChart.loadFlowChart model.canvasModel )
+
 
 view : Model -> Html Msg
 view mod =
     div []
         [ button [ Html.Events.onClick AddNode ] [ text "AddNode" ]
         , button [ Html.Events.onClick SaveFlowChart ] [ text "Save Flow Chart" ]
+        , button [ Html.Events.onClick LoadFlowChart ] [ text "Load Flow Chart" ]
         , FlowChart.view mod.canvasModel
             nodeToHtml
             [ A.style "height" "600px"

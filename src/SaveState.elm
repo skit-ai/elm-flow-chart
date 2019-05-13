@@ -1,6 +1,8 @@
-module SaveState exposing (toFile)
+module SaveState exposing (toFile, toObject, selectFile)
 
-import File.Download as Download
+import File exposing (File)
+import File.Download
+import File.Select
 import FlowChart.Json as FJ
 import FlowChart.Types exposing (..)
 import Json.Decode as Decode
@@ -17,4 +19,14 @@ toFile filePath position fcNodes fcLinks =
                 , ( "fcLinks", Encode.list FJ.encodeFCLink fcLinks )
                 ]
     in
-    Download.string filePath "text/json" (Encode.encode 2 flowChartValue)
+    File.Download.string filePath "application/json" (Encode.encode 2 flowChartValue)
+
+
+selectFile : (File -> msg) -> Cmd msg
+selectFile msg =
+    File.Select.file [ "application/json" ] msg
+
+
+toObject : Bool
+toObject =
+    True

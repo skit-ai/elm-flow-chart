@@ -3,7 +3,7 @@ module FlowChart exposing
     , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
     , addNode, removeNode, removeLink
-    , saveFlowChart
+    , saveFlowChart, loadFlowChart
     )
 
 {-| This library aims to provide a flow chart builder in Elm.
@@ -27,11 +27,12 @@ module FlowChart exposing
 # Functionalities
 
 @docs addNode, removeNode, removeLink
+@docs saveFlowChart, loadFlowChart
 
 -}
 
-import Browser
 import Dict exposing (Dict)
+import File exposing (File)
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html, div)
 import Html.Attributes as A
@@ -77,6 +78,8 @@ type Msg
     | AddLink FCLink String
     | RemoveLink String
     | LinkClick FCLink String
+    | StateFileSelected File
+    | StateFileLoaded String
 
 
 {-| Config for subscribing to events
@@ -183,6 +186,9 @@ update event msg mod =
             in
             ( { mod | currentlyDragging = currentlyDragging }, Cmd.map mod.targetMsg cCmd )
 
+        StateFileSelected file ->
+            ( mod, Cmd.map mod.targetMsg (CmdExtra.messageTask StateFileLoaded (File.toString file)) )
+
         _ ->
             let
                 ( updatedModel, maybeMsg ) =
@@ -265,6 +271,11 @@ saveFlowChart filePath model =
             List.map (\l -> l.fcLink) (Dict.values model.links)
     in
     SaveState.toFile filePath model.position (Dict.values model.nodes) links
+
+
+loadFlowChart : Model msg -> Cmd msg
+loadFlowChart model =
+    Cmd.map model.targetMsg (SaveState.selectFile StateFileSelected)
 
 
 
@@ -373,6 +384,13 @@ updateInternal event msg mod =
 
             else
                 ( mod, Nothing )
+
+        StateFileLoaded fileData ->
+            let
+                _ =
+                    Debug.log "file" fileData
+            in
+            ( mod, Nothing )
 
         _ ->
             ( mod, Nothing )

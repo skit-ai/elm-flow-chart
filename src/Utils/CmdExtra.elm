@@ -1,11 +1,16 @@
-module Utils.CmdExtra exposing (message, multiMessage, optionalMessage)
+module Utils.CmdExtra exposing (message, multiMessage, optionalMessage, messageTask)
 
-import Task
+import Task exposing (Task)
 
 
 message : msg -> Cmd msg
 message x =
     Task.perform identity (Task.succeed x)
+
+
+messageTask : (a -> msg) -> Task Never a -> Cmd msg
+messageTask tMsg tsk =
+    Task.perform tMsg tsk
 
 
 multiMessage : List msg -> Cmd msg
