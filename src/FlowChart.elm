@@ -264,6 +264,11 @@ removeLink linkId model =
     { model | links = Dict.remove linkId model.links }
 
 
+{-| save flowchart state as json file
+
+        saveFlowChart "<path/to/file.json>" FlowChartModel
+
+-}
 saveFlowChart : String -> Model msg -> Cmd msg
 saveFlowChart filePath model =
     let
@@ -273,6 +278,12 @@ saveFlowChart filePath model =
     SaveState.toFile filePath model.position (Dict.values model.nodes) links
 
 
+{-| load flowchart state from a json file. Will open a file selector dialog
+    to select the file
+
+        loadFlowChart FlowChartModel
+
+-}
 loadFlowChart : Model msg -> Cmd msg
 loadFlowChart model =
     Cmd.map model.targetMsg (SaveState.selectFile StateFileSelected)

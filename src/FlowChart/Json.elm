@@ -3,7 +3,7 @@ module FlowChart.Json exposing
     , vector2Decoder, fcNodeDecoder, fcPortDecoder, fcLinkDecoder
     )
 
-{-| Encoders and decoders for used data types
+{-| Encoders and decoders for flowchart data types
 
 
 # Encoders
@@ -26,6 +26,8 @@ import Json.Encode as Encode
 -- ENCODERS
 
 
+{-| encoder for Vector2
+-}
 encodeVector2 : Vector2 -> Encode.Value
 encodeVector2 vec =
     Encode.object
@@ -34,6 +36,8 @@ encodeVector2 vec =
         ]
 
 
+{-| encoder for a FCPort
+-}
 encodeFCPort : FCPort -> Encode.Value
 encodeFCPort fcPort =
     Encode.object
@@ -42,6 +46,8 @@ encodeFCPort fcPort =
         ]
 
 
+{-| encoder for a FCNode
+-}
 encodeFCNode : FCNode -> Encode.Value
 encodeFCNode fcNode =
     Encode.object
@@ -53,6 +59,8 @@ encodeFCNode fcNode =
         ]
 
 
+{-| encoder for a FCLink
+-}
 encodeFCLink : FCLink -> Encode.Value
 encodeFCLink fcLink =
     Encode.object
@@ -66,6 +74,8 @@ encodeFCLink fcLink =
 -- DECODERS
 
 
+{-| vector2 decoder
+-}
 vector2Decoder : Decode.Decoder Vector2
 vector2Decoder =
     Decode.map2 Vector2
@@ -73,6 +83,8 @@ vector2Decoder =
         (Decode.field "y" Decode.float)
 
 
+{-| FCPort Decoder
+-}
 fcPortDecoder : Decode.Decoder FCPort
 fcPortDecoder =
     Decode.map2 FCPort
@@ -80,6 +92,8 @@ fcPortDecoder =
         (Decode.field "position" vector2Decoder)
 
 
+{-| FCNode Decoder
+-}
 fcNodeDecoder : Decode.Decoder FCNode
 fcNodeDecoder =
     Decode.map5 FCNode
@@ -90,6 +104,8 @@ fcNodeDecoder =
         (Decode.field "ports" (Decode.list fcPortDecoder))
 
 
+{-| FCLink Decoder
+-}
 fcLinkDecoder : Decode.Decoder FCLink
 fcLinkDecoder =
     Decode.map3 FCLink
