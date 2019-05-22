@@ -15,7 +15,7 @@ main =
 
 type alias Model =
     { canvasModel : FlowChart.Model Msg
-    , noOfNodes : Int
+    , uid : Int
     }
 
 
@@ -42,7 +42,7 @@ init _ =
                 , linkConfig = FlowChart.defaultLinkConfig
                 }
                 CanvasMsg
-      , noOfNodes = 1
+      , uid = 1000
       }
     , Cmd.none
     )
@@ -67,10 +67,10 @@ update msg model =
             let
                 updatedModel =
                     FlowChart.addNode
-                        (createNode (String.fromInt model.noOfNodes) (FCTypes.Vector2 10 10))
+                        (createNode (String.fromInt model.uid) (FCTypes.Vector2 10 10))
                         model.canvasModel
             in
-            ( { model | noOfNodes = model.noOfNodes + 1, canvasModel = updatedModel }, Cmd.none )
+            ( { model | uid = model.uid + 1, canvasModel = updatedModel }, Cmd.none )
 
         SaveFlowChart ->
             ( model, FlowChart.saveFlowChart "state.json" model.canvasModel )
