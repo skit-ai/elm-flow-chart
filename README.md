@@ -12,7 +12,7 @@ elm install vernacular-ai/elm-flow-chart
 - [MultipleNodeTypesExample](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples/MultipleNodeTypesExample.elm) [Configure different node types and link or port properties]
 - [EventListenerExample](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples/EventListenerExample.elm) [Subscribing to flowchart events]
 - [AddNodesExample](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples/AddNodesExample.elm) [Add or Remove Nodes]
-- - [SaveLoadFlowChartExample](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples/SaveLoadFlowChartExample.elm) [Save or load Flowchart state as json]
+- [SaveLoadFlowChartExample](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples/SaveLoadFlowChartExample.elm) [Save or load Flowchart state as json]
 
 ## Usage
 Its an easy to use library to build flow charts or state diagrams in elm. 
