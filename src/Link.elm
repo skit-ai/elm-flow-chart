@@ -1,4 +1,4 @@
-module Link exposing (Model, initModel, viewLink)
+module Link exposing (Model, initModel, updateLink, updateLinkTempPosition, viewLink)
 
 import Dict exposing (Dict)
 import FlowChart.Types exposing (FCLink, FCNode, FCPort, Vector2)
@@ -55,6 +55,23 @@ viewLink nodes targetMsg link linkConfig =
                     ]
                     []
                 ]
+
+
+updateLink : Model -> FCLink -> Maybe Vector2 -> Model
+updateLink link fcLink newTempPosition =
+    { link | tempPosition = newTempPosition, fcLink = fcLink }
+
+
+updateLinkTempPosition : Model -> Vector2 -> Model
+updateLinkTempPosition link deltaPos =
+    { link
+        | tempPosition =
+            Just
+                (MathUtils.addVector2
+                    (Maybe.withDefault (Vector2 0 0) link.tempPosition)
+                    deltaPos
+                )
+    }
 
 
 

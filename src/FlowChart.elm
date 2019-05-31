@@ -326,14 +326,7 @@ updateInternal event msg mod =
                 DPort nodeId portId linkId ->
                     let
                         updateLink link =
-                            { link
-                                | tempPosition =
-                                    Just
-                                        (MathUtils.addVector2
-                                            (Maybe.withDefault (Vector2 0 0) link.tempPosition)
-                                            deltaPos
-                                        )
-                            }
+                            Link.updateLinkTempPosition link deltaPos
                     in
                     ( { mod | links = Dict.update linkId (Maybe.map updateLink) mod.links }, Nothing )
 
@@ -349,7 +342,7 @@ updateInternal event msg mod =
                                 { fcLink | to = { nodeId = parentId, portId = elementId } }
 
                             updateLink link =
-                                { link | tempPosition = Nothing, fcLink = updateFcLink link.fcLink }
+                                Link.updateLink link (updateFcLink link.fcLink) Nothing
                         in
                         ( { mod
                             | currentlyDragging = None
@@ -386,7 +379,7 @@ updateInternal event msg mod =
         AddLink fcLink linkId ->
             let
                 newLink =
-                    { fcLink = { fcLink | id = linkId }, tempPosition = Nothing }
+                    Link.initModel { fcLink | id = linkId }
             in
             ( { mod
                 | links = Dict.insert linkId newLink mod.links
