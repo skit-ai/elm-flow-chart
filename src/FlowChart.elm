@@ -57,7 +57,7 @@ import Utils.RandomExtra as RandomExtra
 -}
 type alias Model msg =
     { position : Vector2
-    , nodes : Dict String FCNode
+    , nodes : Dict String (Node.Model Msg)
     , links : Dict String Link.Model
     , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
@@ -107,7 +107,7 @@ type alias FCEvent msg =
 init : FCCanvas -> (Msg -> msg) -> Model msg
 init canvas target =
     { position = canvas.position
-    , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
+    , nodes = Dict.fromList (List.map (\n -> ( n.id, Node.initModel n )) canvas.nodes)
     , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) canvas.links)
     , portConfig = canvas.portConfig
     , linkConfig = canvas.linkConfig
@@ -222,7 +222,7 @@ view mod nodeMap canvasStyle =
                 ]
                 (List.map
                     (\node ->
-                        Node.viewNode node DragMsg mod.portConfig (nodeMap node.nodeType)
+                        Node.viewNode node DragMsg mod.portConfig nodeMap
                     )
                     (Dict.values mod.nodes)
                     ++ [ svg
@@ -241,7 +241,7 @@ view mod nodeMap canvasStyle =
 -}
 addNode : FCNode -> Model msg -> Model msg
 addNode newNode model =
-    { model | nodes = Dict.insert newNode.id newNode model.nodes }
+    { model | nodes = Dict.insert newNode.id (Node.initModel newNode) model.nodes }
 
 
 {-| remove node from canvas
@@ -274,12 +274,15 @@ saveFlowChart filePath model =
     let
         links =
             List.map (\l -> l.fcLink) (Dict.values model.links)
+
+        nodes =
+            List.map (\n -> n.fcNode) (Dict.values model.nodes)
     in
-    SaveState.toFile filePath model.position (Dict.values model.nodes) links
+    SaveState.toFile filePath model.position nodes links
 
 
 {-| load flowchart state from a json file. Will open a file selector dialog
-    to select the file
+to select the file
 
         loadFlowChart FlowChartModel
 
@@ -310,12 +313,15 @@ updateInternal event msg mod =
                 DCanvas ->
                     ( { mod | position = MathUtils.addVector2 mod.position deltaPos }, Nothing )
 
-                DNode node ->
+                DNode clickedNode ->
                     let
-                        updateNode fcNode =
+                        updateFCNode fcNode =
                             { fcNode | position = MathUtils.addVector2 fcNode.position deltaPos }
+
+                        updateNode node =
+                            { node | fcNode = updateFCNode node.fcNode }
                     in
-                    ( { mod | nodes = Dict.update node.id (Maybe.map updateNode) mod.nodes }, Nothing )
+                    ( { mod | nodes = Dict.update clickedNode.id (Maybe.map updateNode) mod.nodes }, Nothing )
 
                 DPort nodeId portId linkId ->
                     let
@@ -404,7 +410,7 @@ updateInternal event msg mod =
                 Just data ->
                     ( { mod
                         | position = data.position
-                        , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) data.nodes)
+                        , nodes = Dict.fromList (List.map (\n -> ( n.id, Node.initModel n )) data.nodes)
                         , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) data.links)
                       }
                     , Nothing

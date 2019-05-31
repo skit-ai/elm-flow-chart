@@ -4,6 +4,7 @@ import Dict exposing (Dict)
 import FlowChart.Types exposing (FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html)
 import Json.Decode as Decode
+import Node
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
 import Svg.Events as SvgEvents
@@ -20,7 +21,7 @@ initModel fcLink =
 
 
 viewLink :
-    Dict String FCNode
+    Dict String (Node.Model msg)
     -> (FCLink -> String -> msg)
     -> Model
     -> { linkSize : Int, linkColor : String }
@@ -60,7 +61,7 @@ viewLink nodes targetMsg link linkConfig =
 -- HELPER FUNCTIONS
 
 
-calcPositions : Model -> Dict String FCNode -> Maybe ( Vector2, Vector2 )
+calcPositions : Model -> Dict String (Node.Model msg) -> Maybe ( Vector2, Vector2 )
 calcPositions link nodes =
     let
         fcLink =
@@ -81,21 +82,21 @@ calcPositions link nodes =
         (getPortPosition fcLink.to.portId (Dict.get fcLink.to.nodeId nodes))
 
 
-getPortPosition : String -> Maybe FCNode -> Maybe Vector2
-getPortPosition portId node =
+getPortPosition : String -> Maybe (Node.Model msg) -> Maybe Vector2
+getPortPosition portId maybeNode =
     let
         addRelativePosition pos1 pos2 dim =
             { x = pos1.x + pos2.x * dim.x, y = pos1.y + pos2.y * dim.y + 10 }
 
-        toPos : FCPort -> FCNode -> Vector2
-        toPos fcPort fcNode =
-            addRelativePosition fcNode.position fcPort.position fcNode.dim
+        toPos : FCPort -> Node.Model msg -> Vector2
+        toPos fcPort node =
+            addRelativePosition node.fcNode.position fcPort.position node.fcNode.dim
 
-        getPort : FCNode -> Maybe FCPort
-        getPort fcNode =
-            List.head (List.filter (.id >> (==) portId) fcNode.ports)
+        getPort : Node.Model msg -> Maybe FCPort
+        getPort node =
+            List.head (List.filter (.id >> (==) portId) node.fcNode.ports)
     in
-    Maybe.map2 toPos (Maybe.andThen getPort node) node
+    Maybe.map2 toPos (Maybe.andThen getPort maybeNode) maybeNode
 
 
 updatePosition : Vector2 -> Vector2 -> Vector2

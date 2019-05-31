@@ -1,4 +1,4 @@
-module Node exposing (viewNode)
+module Node exposing (Model, initModel, viewNode)
 
 import FlowChart.Types exposing (FCNode, FCPort, Vector2)
 import Html exposing (Html, button, div, text)
@@ -7,13 +7,29 @@ import Internal exposing (DraggableTypes(..), toPx)
 import Utils.Draggable as Draggable
 
 
+type alias Model msg =
+    { fcNode : FCNode, html : Maybe (Html msg) }
+
+
+initModel : FCNode -> Model msg
+initModel fcNode =
+    { fcNode = fcNode, html = Nothing }
+
+
 viewNode :
-    FCNode
+    Model msg
     -> (Draggable.Msg DraggableTypes -> msg)
     -> { portSize : Vector2, portColor : String }
+    -> (String -> Html msg)
     -> Html msg
-    -> Html msg
-viewNode fcNode dragListener portConfig children =
+viewNode node dragListener portConfig nodeMap =
+    let
+        fcNode =
+            node.fcNode
+
+        children =
+            nodeMap node.fcNode.nodeType
+    in
     div
         [ A.id fcNode.id
         , A.style "position" "absolute"
