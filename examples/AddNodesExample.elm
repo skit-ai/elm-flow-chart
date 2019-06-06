@@ -14,7 +14,7 @@ main =
 
 
 type alias Model =
-    { canvasModel : FlowChart.Model Msg
+    { fcModel : FlowChart.Model Msg
     , noOfNodes : Int
     }
 
@@ -31,7 +31,7 @@ flowChartEvent =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { canvasModel =
+    ( { fcModel =
             FlowChart.init
                 { nodes = [ createNode "0" (FCTypes.Vector2 100 200) ]
                 , position = FCTypes.Vector2 0 0
@@ -48,34 +48,29 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    FlowChart.subscriptions model.canvasModel
+    FlowChart.subscriptions model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CanvasMsg cMsg ->
-            let
-                ( canvasModel, canvasCmd ) =
-                    FlowChart.update flowChartEvent cMsg model.canvasModel
-            in
-            ( { model | canvasModel = canvasModel }, canvasCmd )
+            FlowChart.update flowChartEvent cMsg model
 
         AddNode ->
             let
-                updatedModel =
-                    FlowChart.addNode
-                        (createNode (String.fromInt model.noOfNodes) (FCTypes.Vector2 10 10))
-                        model.canvasModel
+                updatedModel = FlowChart.addNode
+                    (createNode (String.fromInt model.noOfNodes) (FCTypes.Vector2 10 10))
+                    model
             in
-            ( { model | noOfNodes = model.noOfNodes + 1, canvasModel = updatedModel }, Cmd.none )
+            ( { updatedModel | noOfNodes = model.noOfNodes + 1 }, Cmd.none )
 
 
 view : Model -> Html Msg
-view mod =
+view model =
     div []
         [ button [ Html.Events.onClick AddNode ] [ text "AddNode" ]
-        , FlowChart.view mod.canvasModel
+        , FlowChart.view model
             nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"

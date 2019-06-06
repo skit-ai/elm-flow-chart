@@ -15,7 +15,8 @@ main =
 
 
 type alias Model =
-    { canvasModel : FlowChart.Model Msg
+    { fcModel : FlowChart.Model Msg
+    , clickedNodeId : Maybe String
     }
 
 
@@ -37,7 +38,7 @@ flowChartEvent =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { canvasModel =
+    ( { fcModel =
             FlowChart.init
                 { nodes =
                     [ createNode "node-0" (FCTypes.Vector2 10 10)
@@ -49,6 +50,7 @@ init _ =
                 , linkConfig = FlowChart.defaultLinkConfig
                 }
                 CanvasMsg
+      , clickedNodeId = Nothing
       }
     , Cmd.none
     )
@@ -56,42 +58,33 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    FlowChart.subscriptions model.canvasModel
+    FlowChart.subscriptions model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CanvasMsg cMsg ->
-            let
-                ( canvasModel, canvasCmd ) =
-                    FlowChart.update flowChartEvent cMsg model.canvasModel
-            in
-            ( { model | canvasModel = canvasModel }, canvasCmd )
+            FlowChart.update flowChartEvent cMsg model
 
         CanvasClick ->
-            let
-                _ = Debug.log "canvas" "click"
-            in
-            ( model, Cmd.none )
+            ( { model | clickedNodeId = Nothing }, Cmd.none )
 
         NodeClick fcNode ->
-            let
-                _ = Debug.log "node" fcNode.id
-            in
-            ( model, Cmd.none )
+            ( { model | clickedNodeId = Just fcNode.id }, Cmd.none )
 
         LinkClick fcLink ->
             let
-                _ = Debug.log "key" fcLink
+                _ =
+                    Debug.log "key" fcLink
             in
             ( model, Cmd.none )
 
 
 view : Model -> Html Msg
-view mod =
+view model =
     div []
-        [ FlowChart.view mod.canvasModel
+        [ FlowChart.view model
             nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"

@@ -3,7 +3,7 @@ module FlowChart exposing
     , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
     , addNode, removeNode, removeLink
-    , setFCState, getFCState
+    , getFCState, setFCState
     )
 
 {-| This library aims to provide a flow chart builder in Elm.
@@ -147,22 +147,34 @@ initEventConfig events =
 
 {-| subscriptions
 -}
-subscriptions : Model msg -> Sub msg
+subscriptions : { m | fcModel : Model msg } -> Sub msg
 subscriptions model =
-    Sub.map model.targetMsg (Draggable.subscriptions DragMsg model.dragState)
+    let
+        fcModel =
+            model.fcModel
+    in
+    Sub.map fcModel.targetMsg (Draggable.subscriptions DragMsg fcModel.dragState)
 
 
 {-| call to update the canvas
 -}
-update : FCEventConfig msg -> Msg -> Model msg -> ( Model msg, Cmd msg )
-update event msg mod =
+update :
+    FCEventConfig msg
+    -> Msg
+    -> { m | fcModel : Model msg }
+    -> ( { m | fcModel : Model msg }, Cmd msg )
+update event msg model =
+    let
+        fcModel =
+            model.fcModel
+    in
     case msg of
         DragMsg dragMsg ->
             let
                 ( updatedMod, cmdMsg ) =
-                    Draggable.update dragEvent dragMsg mod
+                    Draggable.update dragEvent dragMsg fcModel
             in
-            ( updatedMod, Cmd.map mod.targetMsg cmdMsg )
+            ( { model | fcModel = updatedMod }, Cmd.map fcModel.targetMsg cmdMsg )
 
         OnDragStart currentlyDragging ->
             let
@@ -180,21 +192,28 @@ update event msg mod =
 
                         _ ->
                             Cmd.none
+
+                updatedMod =
+                    { fcModel | currentlyDragging = currentlyDragging }
             in
-            ( { mod | currentlyDragging = currentlyDragging }, Cmd.map mod.targetMsg cCmd )
+            ( { model | fcModel = updatedMod }, Cmd.map fcModel.targetMsg cCmd )
 
         _ ->
             let
-                ( updatedModel, maybeMsg ) =
-                    updateInternal event msg mod
+                ( updatedMod, maybeMsg ) =
+                    updateInternal event msg fcModel
             in
-            ( updatedModel, CmdExtra.optionalMessage maybeMsg )
+            ( { model | fcModel = updatedMod }, CmdExtra.optionalMessage maybeMsg )
 
 
 {-| display the canvas
 -}
-view : Model msg -> (FCNode -> Html Msg) -> List (Html.Attribute Msg) -> Html msg
-view mod nodeMap canvasStyle =
+view : { m | fcModel : Model msg } -> (FCNode -> Html Msg) -> List (Html.Attribute Msg) -> Html msg
+view model nodeMap canvasStyle =
+    let
+        mod =
+            model.fcModel
+    in
     Html.map mod.targetMsg
         (div
             ([ A.style "overflow" "hidden"
@@ -229,20 +248,31 @@ view mod nodeMap canvasStyle =
 
 
 {-| add node to canvas
+
+        addNode fcNode Model
+
 -}
-addNode : FCNode -> Model msg -> Model msg
+addNode : FCNode -> { m | fcModel : Model msg } -> { m | fcModel : Model msg }
 addNode newNode model =
-    { model | nodes = Dict.insert newNode.id (Node.initModel newNode) model.nodes }
+    let
+        fcModel =
+            model.fcModel
+    in
+    { model | fcModel = { fcModel | nodes = Dict.insert newNode.id (Node.initModel newNode) fcModel.nodes } }
 
 
 {-| remove node from canvas
 
-        removeNode "node-id" FlowChartModel
+        removeNode "node-id" Model
 
 -}
-removeNode : String -> Model msg -> Model msg
+removeNode : String -> { m | fcModel : Model msg } -> { m | fcModel : Model msg }
 removeNode nodeId model =
-    { model | nodes = Dict.remove nodeId model.nodes }
+    let
+        fcModel =
+            model.fcModel
+    in
+    { model | fcModel = { fcModel | nodes = Dict.remove nodeId fcModel.nodes } }
 
 
 {-| remove link from canvas
@@ -250,9 +280,13 @@ removeNode nodeId model =
         removeLink "link-id" FlowChartModel
 
 -}
-removeLink : String -> Model msg -> Model msg
+removeLink : String -> { m | fcModel : Model msg } -> { m | fcModel : Model msg }
 removeLink linkId model =
-    { model | links = Dict.remove linkId model.links }
+    let
+        fcModel =
+            model.fcModel
+    in
+    { model | fcModel = { fcModel | links = Dict.remove linkId fcModel.links } }
 
 
 {-| get current flowchart state i.e position of canvas, nodes and links

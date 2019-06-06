@@ -21,7 +21,7 @@ main =
 
 
 type alias Model =
-    { canvasModel : FlowChart.Model Msg
+    { fcModel : FlowChart.Model Msg
     }
 
 
@@ -40,7 +40,7 @@ flowChartEvent =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { canvasModel =
+    ( { fcModel =
             FlowChart.init
                 { nodes =
                     [ createNode "0" (FCTypes.Vector2 100 200)
@@ -60,21 +60,17 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    FlowChart.subscriptions model.canvasModel
+    FlowChart.subscriptions model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CanvasMsg cMsg ->
-            let
-                ( canvasModel, canvasCmd ) =
-                    FlowChart.update flowChartEvent cMsg model.canvasModel
-            in
-            ( { model | canvasModel = canvasModel }, canvasCmd )
+            FlowChart.update flowChartEvent cMsg model
 
         SaveFlowChart ->
-            ( model, saveFlowChart model.canvasModel )
+            ( model, saveFlowChart model.fcModel )
 
         LoadFlowChart ->
             ( model, File.Select.file [ "application/json" ] StateFileSelected )
@@ -83,15 +79,15 @@ update msg model =
             ( model, Task.perform StateFileLoaded (File.toString file) )
 
         StateFileLoaded fileData ->
-            ( { model | canvasModel = loadFlowChart model.canvasModel fileData }, Cmd.none )
+            ( { model | fcModel = loadFlowChart model.fcModel fileData }, Cmd.none )
 
 
 view : Model -> Html Msg
-view mod =
+view model =
     div []
         [ button [ Html.Events.onClick SaveFlowChart ] [ text "Save Flow Chart" ]
         , button [ Html.Events.onClick LoadFlowChart ] [ text "Load Flow Chart" ]
-        , FlowChart.view mod.canvasModel
+        , FlowChart.view model
             nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"
