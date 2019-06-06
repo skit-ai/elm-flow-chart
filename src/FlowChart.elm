@@ -3,6 +3,7 @@ module FlowChart exposing
     , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
     , addNode, removeNode, removeLink
+    , setFCState, getFCState
     )
 
 {-| This library aims to provide a flow chart builder in Elm.
@@ -26,6 +27,7 @@ module FlowChart exposing
 # Functionalities
 
 @docs addNode, removeNode, removeLink
+@docs getFCState, setFCState
 
 -}
 
@@ -254,6 +256,40 @@ removeNode nodeId model =
 removeLink : String -> Model msg -> Model msg
 removeLink linkId model =
     { model | links = Dict.remove linkId model.links }
+
+
+{-| get current flowchart state i.e position of canvas, nodes and links
+
+        getFCState FlowChart.Model
+
+-}
+getFCState :
+    Model msg
+    ->
+        { position : Vector2
+        , nodes : List FCNode
+        , links : List FCLink
+        }
+getFCState model =
+    { position = model.position
+    , nodes = List.map (\n -> n.fcNode) (Dict.values model.nodes)
+    , links = List.map (\l -> l.fcLink) (Dict.values model.links)
+    }
+
+
+setFCState :
+    { position : Vector2
+    , nodes : List FCNode
+    , links : List FCLink
+    }
+    -> Model msg
+    -> Model msg
+setFCState data model =
+    { model
+        | position = data.position
+        , nodes = Dict.fromList (List.map (\n -> ( n.id, Node.initModel n )) data.nodes)
+        , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) data.links)
+    }
 
 
 

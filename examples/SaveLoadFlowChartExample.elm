@@ -1,11 +1,18 @@
-module SaveLoadFlowChartExample exposing (Model, Msg(..), init, main, update, view)
+module SaveLoadFlowChartExample exposing (main)
 
 import Browser
+import File exposing (File)
+import File.Download
+import File.Select
 import FlowChart
+import FlowChart.Json as FJ
 import FlowChart.Types as FCTypes
 import Html exposing (..)
 import Html.Attributes as A
 import Html.Events
+import Json.Decode as Decode
+import Json.Encode as Encode
+import Task
 
 
 main : Program () Model Msg
@@ -15,15 +22,15 @@ main =
 
 type alias Model =
     { canvasModel : FlowChart.Model Msg
-    , uid : Int
     }
 
 
 type Msg
     = CanvasMsg FlowChart.Msg
-    | AddNode
     | SaveFlowChart
     | LoadFlowChart
+    | StateFileSelected File
+    | StateFileLoaded String
 
 
 flowChartEvent : FlowChart.FCEventConfig Msg
@@ -35,14 +42,17 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { canvasModel =
             FlowChart.init
-                { nodes = [ createNode "0" (FCTypes.Vector2 100 200) ]
+                { nodes =
+                    [ createNode "0" (FCTypes.Vector2 100 200)
+                    , createNode "1" (FCTypes.Vector2 400 300)
+                    , createNode "2" (FCTypes.Vector2 500 600)
+                    ]
                 , position = FCTypes.Vector2 0 0
                 , links = []
                 , portConfig = FlowChart.defaultPortConfig
                 , linkConfig = FlowChart.defaultLinkConfig
                 }
                 CanvasMsg
-      , uid = 1000
       }
     , Cmd.none
     )
@@ -63,27 +73,23 @@ update msg model =
             in
             ( { model | canvasModel = canvasModel }, canvasCmd )
 
-        AddNode ->
-            let
-                updatedModel =
-                    FlowChart.addNode
-                        (createNode (String.fromInt model.uid) (FCTypes.Vector2 10 10))
-                        model.canvasModel
-            in
-            ( { model | uid = model.uid + 1, canvasModel = updatedModel }, Cmd.none )
-
         SaveFlowChart ->
-            ( model, FlowChart.saveFlowChart "state.json" model.canvasModel )
+            ( model, saveFlowChart model.canvasModel )
 
         LoadFlowChart ->
-            ( model, FlowChart.loadFlowChart model.canvasModel )
+            ( model, File.Select.file [ "application/json" ] StateFileSelected )
+
+        StateFileSelected file ->
+            ( model, Task.perform StateFileLoaded (File.toString file) )
+
+        StateFileLoaded fileData ->
+            ( { model | canvasModel = loadFlowChart model.canvasModel fileData }, Cmd.none )
 
 
 view : Model -> Html Msg
 view mod =
     div []
-        [ button [ Html.Events.onClick AddNode ] [ text "AddNode" ]
-        , button [ Html.Events.onClick SaveFlowChart ] [ text "Save Flow Chart" ]
+        [ button [ Html.Events.onClick SaveFlowChart ] [ text "Save Flow Chart" ]
         , button [ Html.Events.onClick LoadFlowChart ] [ text "Load Flow Chart" ]
         , FlowChart.view mod.canvasModel
             nodeToHtml
@@ -121,3 +127,46 @@ createNode id position =
         , { id = "port-" ++ id ++ "-1", position = FCTypes.Vector2 0.85 0.42 }
         ]
     }
+
+
+saveFlowChart : FlowChart.Model Msg -> Cmd Msg
+saveFlowChart model =
+    let
+        { position, nodes, links } =
+            FlowChart.getFCState model
+
+        flowChartValue =
+            Encode.object
+                [ ( "position", FJ.encodeVector2 position )
+                , ( "fcNodes", Encode.list FJ.encodeFCNode nodes )
+                , ( "fcLinks", Encode.list FJ.encodeFCLink links )
+                ]
+    in
+    File.Download.string "state.json" "application/json" (Encode.encode 2 flowChartValue)
+
+
+type alias FCState =
+    { position : FCTypes.Vector2
+    , nodes : List FCTypes.FCNode
+    , links : List FCTypes.FCLink
+    }
+
+
+loadFlowChart : FlowChart.Model Msg -> String -> FlowChart.Model Msg
+loadFlowChart model fileData =
+    let
+        flowChartDecoder =
+            Decode.map3 FCState
+                (Decode.field "position" FJ.vector2Decoder)
+                (Decode.field "fcNodes" (Decode.list FJ.fcNodeDecoder))
+                (Decode.field "fcLinks" (Decode.list FJ.fcLinkDecoder))
+    
+        fcData = Result.toMaybe (Decode.decodeString flowChartDecoder fileData)
+    in
+    
+    case fcData of
+        Nothing ->
+            model
+
+        Just data ->
+            FlowChart.setFCState data model
