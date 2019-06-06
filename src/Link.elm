@@ -36,10 +36,14 @@ viewLink nodes targetMsg link linkConfig =
                 pathString =
                     generatePath startPos endPos
             in
-            Svg.g [ SA.fill "none", SA.stroke linkConfig.linkColor ]
+            Svg.g
+                [ SA.fill "none"
+                , SA.class "fclink"
+                , SA.stroke linkConfig.linkColor
+                , SA.strokeWidth (String.fromInt linkConfig.linkSize)
+                ]
                 [ Svg.path
                     [ SA.d pathString
-                    , SA.strokeWidth (String.fromInt linkConfig.linkSize)
                     , SA.markerEnd "url(#arrow)"
                     ]
                     []

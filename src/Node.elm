@@ -53,7 +53,8 @@ viewPort :
 viewPort nodeId fcPort dragListener portConfig =
     div
         [ A.id fcPort.id
-        , A.style "background" portConfig.portColor
+        , A.class "fcport"
+        , A.style "background-color" portConfig.portColor
         , A.style "width" (toPx portConfig.portSize.x)
         , A.style "height" (toPx portConfig.portSize.y)
         , A.style "position" "absolute"

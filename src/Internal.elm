@@ -37,8 +37,20 @@ getArrowHead linkColor =
             , SA.refY "4"
             , SA.markerWidth "8"
             , SA.markerHeight "8"
+            , SA.fill linkColor
             ]
-            [ Svg.path [ SA.d "M0,0 V8 L5,4 Z", SA.fill linkColor ] []
+            [ Svg.path [ SA.d "M0,0 V8 L5,4 Z" ] []
+            ]
+        , Svg.marker
+            [ SA.id "arrow-hover"
+            , SA.orient "auto"
+            , SA.refX "4"
+            , SA.refY "4"
+            , SA.markerWidth "8"
+            , SA.markerHeight "8"
+            , SA.fill linkColor
+            ]
+            [ Svg.path [ SA.d "M0,0 V8 L5,4 Z" ] []
             ]
         ]
     ]
