@@ -3,7 +3,6 @@ module FlowChart exposing
     , init, initEventConfig, defaultPortConfig, defaultLinkConfig, subscriptions
     , update, view
     , addNode, removeNode, removeLink
-    , saveFlowChart, loadFlowChart
     )
 
 {-| This library aims to provide a flow chart builder in Elm.
@@ -27,7 +26,6 @@ module FlowChart exposing
 # Functionalities
 
 @docs addNode, removeNode, removeLink
-@docs saveFlowChart, loadFlowChart
 
 -}
 
@@ -40,7 +38,6 @@ import Internal exposing (DraggableTypes(..), toPx)
 import Link
 import Node
 import Random
-import SaveState
 import Svg exposing (Svg, svg)
 import Svg.Attributes as SA
 import Utils.CmdExtra as CmdExtra
@@ -78,8 +75,6 @@ type Msg
     | AddLink FCLink String
     | RemoveLink String
     | LinkClick FCLink String
-    | StateFileSelected File
-    | StateFileLoaded String
 
 
 {-| Config for subscribing to events
@@ -186,9 +181,6 @@ update event msg mod =
             in
             ( { mod | currentlyDragging = currentlyDragging }, Cmd.map mod.targetMsg cCmd )
 
-        StateFileSelected file ->
-            ( mod, Cmd.map mod.targetMsg (CmdExtra.messageTask StateFileLoaded (File.toString file)) )
-
         _ ->
             let
                 ( updatedModel, maybeMsg ) =
@@ -262,34 +254,6 @@ removeNode nodeId model =
 removeLink : String -> Model msg -> Model msg
 removeLink linkId model =
     { model | links = Dict.remove linkId model.links }
-
-
-{-| save flowchart state as json file
-
-        saveFlowChart "<path/to/file.json>" FlowChartModel
-
--}
-saveFlowChart : String -> Model msg -> Cmd msg
-saveFlowChart filePath model =
-    let
-        links =
-            List.map (\l -> l.fcLink) (Dict.values model.links)
-
-        nodes =
-            List.map (\n -> n.fcNode) (Dict.values model.nodes)
-    in
-    SaveState.toFile filePath model.position nodes links
-
-
-{-| load flowchart state from a json file. Will open a file selector dialog
-to select the file
-
-        loadFlowChart FlowChartModel
-
--}
-loadFlowChart : Model msg -> Cmd msg
-loadFlowChart model =
-    Cmd.map model.targetMsg (SaveState.selectFile StateFileSelected)
 
 
 
@@ -394,20 +358,6 @@ updateInternal event msg mod =
 
             else
                 ( mod, Nothing )
-
-        StateFileLoaded fileData ->
-            case SaveState.toObject fileData of
-                Nothing ->
-                    ( mod, Nothing )
-
-                Just data ->
-                    ( { mod
-                        | position = data.position
-                        , nodes = Dict.fromList (List.map (\n -> ( n.id, Node.initModel n )) data.nodes)
-                        , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) data.links)
-                      }
-                    , Nothing
-                    )
 
         _ ->
             ( mod, Nothing )
