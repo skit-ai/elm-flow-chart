@@ -20,7 +20,7 @@ viewNode :
     Model msg
     -> (Draggable.Msg DraggableTypes -> msg)
     -> { portSize : Vector2, portColor : String }
-    -> (String -> Html msg)
+    -> (FCNode -> Html msg)
     -> Html msg
 viewNode node dragListener portConfig nodeMap =
     let
@@ -28,7 +28,7 @@ viewNode node dragListener portConfig nodeMap =
             node.fcNode
 
         children =
-            nodeMap node.fcNode.nodeType
+            nodeMap node.fcNode
     in
     div
         [ A.id fcNode.id

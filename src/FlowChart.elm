@@ -193,16 +193,13 @@ update event msg mod =
 
 {-| display the canvas
 -}
-view : Model msg -> (String -> Html Msg) -> List (Html.Attribute Msg) -> Html msg
+view : Model msg -> (FCNode -> Html Msg) -> List (Html.Attribute Msg) -> Html msg
 view mod nodeMap canvasStyle =
     Html.map mod.targetMsg
         (div
-            ([ A.style "width" "700px"
-             , A.style "height" "580px"
-             , A.style "overflow" "hidden"
+            ([ A.style "overflow" "hidden"
              , A.style "position" "fixed"
              , A.style "cursor" "move"
-             , A.style "background-color" "lightgrey"
              , Draggable.enableDragging DCanvas DragMsg
              ]
                 ++ canvasStyle

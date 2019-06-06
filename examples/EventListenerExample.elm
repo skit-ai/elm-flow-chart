@@ -95,18 +95,19 @@ view mod =
             nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"
+            , A.style "background-color" "lightgrey"
             ]
         ]
 
 
-nodeToHtml : String -> Html FlowChart.Msg
-nodeToHtml nodeType =
+nodeToHtml : FCTypes.FCNode -> Html FlowChart.Msg
+nodeToHtml fcNode =
     div
         [ A.style "width" "100%"
         , A.style "height" "100%"
         , A.style "background-color" "white"
         ]
-        [ text nodeType ]
+        [ text fcNode.id ]
 
 
 

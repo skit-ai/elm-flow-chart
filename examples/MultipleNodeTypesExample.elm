@@ -71,13 +71,14 @@ view mod =
             nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"
+            , A.style "background-color" "lightgrey"
             ]
         ]
 
 
-nodeToHtml : String -> Html FlowChart.Msg
-nodeToHtml nodeType =
-    case nodeType of
+nodeToHtml : FCTypes.FCNode -> Html FlowChart.Msg
+nodeToHtml fcNode =
+    case fcNode.nodeType of
         "orange" ->
             div
                 [ A.style "width" "100%"
@@ -86,7 +87,7 @@ nodeToHtml nodeType =
                 , A.style "border-radius" "4px"
                 , A.style "box-sizing" "border-box"
                 ]
-                [ text nodeType ]
+                [ text fcNode.id ]
 
         "green" ->
             div
@@ -96,7 +97,7 @@ nodeToHtml nodeType =
                 , A.style "border-radius" "4px"
                 , A.style "box-sizing" "border-box"
                 ]
-                [ text nodeType ]
+                [ text fcNode.id ]
 
         _ ->
             div
@@ -106,7 +107,7 @@ nodeToHtml nodeType =
                 , A.style "border-radius" "4px"
                 , A.style "box-sizing" "border-box"
                 ]
-                [ text nodeType ]
+                [ text fcNode.id ]
 
 
 
