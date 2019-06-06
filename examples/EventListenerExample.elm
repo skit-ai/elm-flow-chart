@@ -84,21 +84,30 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ FlowChart.view model
+        [ p [] [ text "Click on any Node to change color. Click on canvas to revert" ]
+        , FlowChart.view model
             nodeToHtml
-            [ A.style "height" "600px"
+            [ A.style "height" "500px"
             , A.style "width" "85%"
             , A.style "background-color" "lightgrey"
             ]
         ]
 
 
-nodeToHtml : FCTypes.FCNode -> Html FlowChart.Msg
-nodeToHtml fcNode =
+nodeToHtml : FCTypes.FCNode -> Model -> Html FlowChart.Msg
+nodeToHtml fcNode model =
+    let
+        bgColor =
+            if model.clickedNodeId == Just fcNode.id then
+                "#81ceca"
+
+            else
+                "white"
+    in
     div
         [ A.style "width" "100%"
         , A.style "height" "100%"
-        , A.style "background-color" "white"
+        , A.style "background-color" bgColor
         ]
         [ text fcNode.id ]
 

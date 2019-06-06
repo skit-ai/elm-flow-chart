@@ -56,7 +56,7 @@ import Utils.RandomExtra as RandomExtra
 -}
 type alias Model msg =
     { position : Vector2
-    , nodes : Dict String (Node.Model Msg)
+    , nodes : Dict String FCNode
     , links : Dict String Link.Model
     , currentlyDragging : DraggableTypes
     , dragState : Draggable.DragState
@@ -104,7 +104,7 @@ type alias FCEvent msg =
 init : FCCanvas -> (Msg -> msg) -> Model msg
 init canvas target =
     { position = canvas.position
-    , nodes = Dict.fromList (List.map (\n -> ( n.id, Node.initModel n )) canvas.nodes)
+    , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
     , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) canvas.links)
     , portConfig = canvas.portConfig
     , linkConfig = canvas.linkConfig
@@ -208,7 +208,11 @@ update event msg model =
 
 {-| display the canvas
 -}
-view : { m | fcModel : Model msg } -> (FCNode -> Html Msg) -> List (Html.Attribute Msg) -> Html msg
+view :
+    { m | fcModel : Model msg }
+    -> (FCNode -> { m | fcModel : Model msg } -> Html Msg)
+    -> List (Html.Attribute Msg)
+    -> Html msg
 view model nodeMap canvasStyle =
     let
         mod =
@@ -232,7 +236,7 @@ view model nodeMap canvasStyle =
                 ]
                 (List.map
                     (\node ->
-                        Node.viewNode node DragMsg mod.portConfig nodeMap
+                        Node.viewNode node DragMsg mod.portConfig (nodeMap node model)
                     )
                     (Dict.values mod.nodes)
                     ++ [ svg
@@ -258,7 +262,7 @@ addNode newNode model =
         fcModel =
             model.fcModel
     in
-    { model | fcModel = { fcModel | nodes = Dict.insert newNode.id (Node.initModel newNode) fcModel.nodes } }
+    { model | fcModel = { fcModel | nodes = Dict.insert newNode.id newNode fcModel.nodes } }
 
 
 {-| remove node from canvas
@@ -303,7 +307,7 @@ getFCState :
         }
 getFCState model =
     { position = model.position
-    , nodes = List.map (\n -> n.fcNode) (Dict.values model.nodes)
+    , nodes = Dict.values model.nodes
     , links = List.map (\l -> l.fcLink) (Dict.values model.links)
     }
 
@@ -318,7 +322,7 @@ setFCState :
 setFCState data model =
     { model
         | position = data.position
-        , nodes = Dict.fromList (List.map (\n -> ( n.id, Node.initModel n )) data.nodes)
+        , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) data.nodes)
         , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) data.links)
     }
 
@@ -346,11 +350,8 @@ updateInternal event msg mod =
 
                 DNode clickedNode ->
                     let
-                        updateFCNode fcNode =
+                        updateNode fcNode =
                             { fcNode | position = MathUtils.addVector2 fcNode.position deltaPos }
-
-                        updateNode node =
-                            { node | fcNode = updateFCNode node.fcNode }
                     in
                     ( { mod | nodes = Dict.update clickedNode.id (Maybe.map updateNode) mod.nodes }, Nothing )
 
