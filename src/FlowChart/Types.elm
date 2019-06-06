@@ -40,10 +40,10 @@ type alias FCPort =
     nodeType = string identifier used to render html from node map
     port = List of ports
 
-        node = FCNode "node-1" (Vector2 20 20) (Vector2 100 100) "default" [
-            FCPort "port-1" Vector2 0 0.42
-            ,FCPort "port-2" Vector2 0.85 0.42
-        ]
+        node = FCNode "node-1" (Vector2 20 20) (Vector2 100 100) "default"
+            [ FCPort "port-1" Vector2 0 0.42
+            , FCPort "port-2" Vector2 0.85 0.42
+            ]
 
 -}
 type alias FCNode =

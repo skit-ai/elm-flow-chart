@@ -96,13 +96,15 @@ type alias FCEvent msg =
     FCEventConfig msg -> FCEventConfig msg
 
 
-{-| init flowchart
+{-|
 
-    init fcCanvas nodeMap
+    ** Initiaze the flowchart **
+
+        init fcCanvas targetMsg
 
 -}
 init : FCCanvas -> (Msg -> msg) -> Model msg
-init canvas target =
+init canvas targetMsg =
     { position = canvas.position
     , nodes = Dict.fromList (List.map (\n -> ( n.id, n )) canvas.nodes)
     , links = Dict.fromList (List.map (\l -> ( l.id, Link.initModel l )) canvas.links)
@@ -110,11 +112,11 @@ init canvas target =
     , linkConfig = canvas.linkConfig
     , currentlyDragging = None
     , dragState = Draggable.init
-    , targetMsg = target
+    , targetMsg = targetMsg
     }
 
 
-{-| get default port config
+{-| Get default port config
 
     portSize = Size of port in Vector2 (20, 20)
     portColor = Color of port (grey)
@@ -125,7 +127,7 @@ defaultPortConfig =
     { portSize = { x = 20, y = 20 }, portColor = "grey" }
 
 
-{-| get default link config
+{-| Get default link config
 
     linkSize = stroke width of link (2px)
     linkColor = Color of link (#6495ED)
@@ -136,9 +138,11 @@ defaultLinkConfig =
     { linkSize = 2, linkColor = "#6495ED" }
 
 
-{-| pass list of events to subscribe to.
-Currently supported are :
-onCanvasClick, onNodeClick, onLinkClick
+{-| List of events to subscribe
+
+    Currently supported are :
+    onCanvasClick, onNodeClick, onLinkClick
+
 -}
 initEventConfig : List (FCEvent msg) -> FCEventConfig msg
 initEventConfig events =
@@ -156,7 +160,10 @@ subscriptions model =
     Sub.map fcModel.targetMsg (Draggable.subscriptions DragMsg fcModel.dragState)
 
 
-{-| call to update the canvas
+{-|
+
+    ** Update the flowchart **
+
 -}
 update :
     FCEventConfig msg
@@ -206,14 +213,31 @@ update event msg model =
             ( { model | fcModel = updatedMod }, CmdExtra.optionalMessage maybeMsg )
 
 
-{-| display the canvas
+{-|
+
+    ** Display the flowchart **
+
+    - model -> Model holding flowchart Model
+    - nodeMap -> function which gives node's html. For example:
+
+        nodeMap : FCNode -> Model -> Html FlowChart.Msg
+        nodeMap fcNode model =
+            div
+                [ A.style "width" "100%"
+                , A.style "height" "100%"
+                , A.style "background-color" "white"
+                ]
+                [ text fcNode.id ]
+
+    - fcChartStyle -> css attributes for flowchart
+
 -}
 view :
     { m | fcModel : Model msg }
     -> (FCNode -> { m | fcModel : Model msg } -> Html Msg)
     -> List (Html.Attribute Msg)
     -> Html msg
-view model nodeMap canvasStyle =
+view model nodeMap fcChartStyle =
     let
         mod =
             model.fcModel
@@ -225,7 +249,7 @@ view model nodeMap canvasStyle =
              , A.style "cursor" "move"
              , Draggable.enableDragging DCanvas DragMsg
              ]
-                ++ canvasStyle
+                ++ fcChartStyle
             )
             [ div
                 [ A.style "width" "0px"
