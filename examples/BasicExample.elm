@@ -70,8 +70,8 @@ view model =
         ]
 
 
-nodeToHtml : FCTypes.FCNode -> Html FlowChart.Msg
-nodeToHtml fcNode =
+nodeToHtml : FCTypes.FCNode -> Model -> Html FlowChart.Msg
+nodeToHtml fcNode model =
     div
         [ A.style "width" "100%"
         , A.style "height" "100%"

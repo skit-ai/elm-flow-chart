@@ -96,14 +96,13 @@ view model =
         ]
 
 
-nodeToHtml : FCTypes.FCNode -> Html FlowChart.Msg
-nodeToHtml fcNode =
+nodeToHtml : FCTypes.FCNode -> Model -> Html FlowChart.Msg
+nodeToHtml fcNode model =
     div
         [ A.style "width" "100%"
         , A.style "height" "100%"
         , A.style "background-color" "white"
         , A.style "border-radius" "4px"
-        , A.style "padding" "5px"
         , A.style "box-sizing" "border-box"
         ]
         [ text fcNode.id ]

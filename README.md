@@ -27,7 +27,7 @@ import FlowChart.Types as FCTypes
 **2. Define Model**
 ```elm
 type alias Model =
-    { canvasModel : FlowChart.Model }
+    { fcModel : FlowChart.Model }
 ```
 
 **3. Some Initialization**
@@ -37,12 +37,12 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.map CanvasMsg (FlowChart.subscriptions model.canvasModel)
+    Sub.map CanvasMsg (FlowChart.subscriptions model)
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { canvasModel =
+    ( { fcModel =
             FlowChart.init
                 { nodes =
                     [ createNode "node-0" (FCTypes.Vector2 10 10)
@@ -53,22 +53,33 @@ init _ =
                 , portConfig = FlowChart.defaultPortConfig
                 , linkConfig = FlowChart.defaultLinkConfig
                 }
-                nodeToHtml
+                CanvasMsg
       }
     , Cmd.none
     )
 
 {-| Defines how a node should look. Map a string node type to html.
 -}
-nodeToHtml : String -> Html FlowChart.Msg
-nodeToHtml nodeType =
+nodeToHtml : FCNode -> Model -> Html FlowChart.Msg
+nodeToHtml node model =
     div
         [ A.style "width" "100%"
         , A.style "height" "100%"
         , A.style "background-color" "white"
-        , A.style "box-sizing" "border-box"
         ]
         [ text nodeType ]
+
+
+createNode : String -> FCTypes.Vector2 -> FCTypes.FCNode
+createNode id position =
+    { position = position
+    , id = id
+    , dim = FCTypes.Vector2 130 100
+    , nodeType = "default"
+    , ports =
+        [ { id = "port-" ++ id ++ "-0", position = FCTypes.Vector2 0 0.42 }
+        ]
+    }
 ```
 FlowChart `init` takes nodes, position, links and some configs for initial state. See [FCTypes](https://github.com/Vernacular-ai/elm-flow-chart/blob/master/src/FlowChart/Types.elm) to understand types used in the library.
 
@@ -78,26 +89,23 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CanvasMsg cMsg ->
-            let
-                ( canvasModel, canvasCmd ) =
-                    FlowChart.update flowChartEvent cMsg model.canvasModel
-            in
-            ( { model | canvasModel = canvasModel }, canvasCmd )
+            FlowChart.update flowChartEvent cMsg model
 ```
 
 **5. View**
 ```elm
 view : Model -> Html Msg
-view mod =
+view model =
     div []
-        [ FlowChart.view mod.canvasModel
+        [ FlowChart.view model
             nodeToHtml
             [ A.style "height" "600px"
             , A.style "width" "85%"
+            , A.style "background-color" "lightgrey"
             ]
         ]
 ```
 
-See [examples](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples) to better understand all the features and how to use them.
+See [examples](https://github.com/Vernacular-ai/elm-flow-chart/tree/master/examples) to understand all the features and how to use them.
 
 Visit [here](https://package.elm-lang.org/packages/vernacular-ai/elm-flow-chart/latest/) for docs and more information.

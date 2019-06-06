@@ -72,8 +72,8 @@ view model =
         ]
 
 
-nodeToHtml : FCTypes.FCNode -> Html FlowChart.Msg
-nodeToHtml fcNode =
+nodeToHtml : FCTypes.FCNode -> Model -> Html FlowChart.Msg
+nodeToHtml fcNode model =
     case fcNode.nodeType of
         "orange" ->
             div
