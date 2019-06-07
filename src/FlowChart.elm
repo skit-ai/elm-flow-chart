@@ -32,7 +32,6 @@ module FlowChart exposing
 -}
 
 import Dict exposing (Dict)
-import File exposing (File)
 import FlowChart.Types exposing (FCCanvas, FCLink, FCNode, FCPort, Vector2)
 import Html exposing (Html, div)
 import Html.Attributes as A
@@ -317,7 +316,7 @@ removeLink linkId model =
     { model | fcModel = { fcModel | links = Dict.remove linkId fcModel.links } }
 
 
-{-| get current flowchart state i.e position of canvas, nodes and links
+{-| Get current flowchart state i.e position of canvas, nodes and links
 
         getFCState FlowChart.Model
 
@@ -335,7 +334,10 @@ getFCState model =
     , links = List.map (\l -> l.fcLink) (Dict.values model.links)
     }
 
+{-|
 
+    Set flowchart state i.e will override position of canvas, nodes and links
+-}
 setFCState :
     { position : Vector2
     , nodes : List FCNode
